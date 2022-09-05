@@ -185,9 +185,9 @@ function showResultList(jsonPara) {
           var img = document.createElement('img');
 
           if (itemCollection[i].Type == "pdf") {
-              img.src = "pdf_icon.png"
+              img.src = "img/pdf_icon.png"
           } else {
-              img.src = "txt_icon.png"
+              img.src = "img/txt_icon.png"
           }
 
           var liElement = handleListElement(selectMatching, img, itemCollection[i], i)
