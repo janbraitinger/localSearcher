@@ -19,7 +19,7 @@ import java.util.Collection;
 
 public class Main {
 
-    String indexDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Experimente/05052022_lucene_test/documents";
+    String indexDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index";
     String dataDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData";
     Indexer indexer;
     Searcher searcher;
