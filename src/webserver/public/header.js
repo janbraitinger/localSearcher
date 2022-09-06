@@ -13,7 +13,8 @@ export const Section = {
     autocompleteList : "#list",
     filterButton : "#filterButton",
     docCounter : "#countEntrys",
-    changeIndexBtn : "#changeIndexBtn"
+    changeIndexBtn : "#changeIndexBtn",
+    termButton : ".termBtn"
  }
  
  
@@ -24,14 +25,16 @@ export const Section = {
     CHANGEDIR: "changedir",
     SERVERMESSAGE : "stdout",
     CONF: "conf",
-    RESULTLIST : "docResultList"
+    RESULTLIST : "docResultList",
+    FILE : "fileBack"
  }
 
  export const RpcSendCall = {
    AUTOCOMPLETE_SEARCH : "search",
    SEARCH : "finalSearch",
    CHECK_INDEX : "checkIndex",
-   NEW_INDEX : "newIndex"
+   NEW_INDEX : "newIndex",
+   GET_FILE : "file"
 }
 
 

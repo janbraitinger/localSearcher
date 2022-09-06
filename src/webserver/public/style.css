@@ -188,3 +188,23 @@ main{
     height: 100px;
     color:red;
 }
+
+.termBtn{
+    float:right;
+    border:0px;
+    margin-right: 5px;
+    height: 25px;
+    text-align: center;
+    font-size: 11px;
+    background-color: rgba(18, 54, 217, 0.1);
+    padding-left: 5px;
+    padding-right: 5px;
+    color:darkgray;
+}
+
+
+#getDoc{
+    color:lightskyblue;
+    text-align: center;
+    cursor: pointer;
+}

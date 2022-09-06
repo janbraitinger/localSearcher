@@ -5,6 +5,7 @@ import {
   Constant
 } from './header.js';
 
+var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const getSection = new Object();
 getSection.searchButton = $(Section.searchButton)
@@ -21,6 +22,7 @@ getSection.filterSection = $(Section.filterSection)
 getSection.docCounter = $(Section.docCounter)
 getSection.searchResults = $(Section.searchResults)
 getSection.changeIndexBtn = $(Section.changeIndexBtn)
+getSection.termBtn = $(Section.term)
 
 if (isIOS) {
   getSection.searchButton.prop('disabled', true)
@@ -152,11 +154,25 @@ getSection.filterButton.click(() => {
 
 
 
+
 function handleListElement(MATCHING, img, obj, i) {
+  var getTerm = ""
+  try {
+      getTerm = obj.Stats.split("contents:")[1].split(" in ")[0]
+  } catch {
+      getTerm = "unknown"
+  }
+  let btn = $(document.createElement('button')).prop({
+      type: 'button',
+      class: 'termBtn'
+  })
+  termArray.push(getTerm)
+  btn.html(getTerm)
   const li = document.createElement("li");
   li.appendChild(img)
   li.appendChild(document.createTextNode(obj.Title));
   selectMatching(MATCHING).appendTo(li)
+  btn.appendTo(li)
   li.setAttribute('data-toggle', 'modal');
   li.setAttribute('data-target', '#myModal');
   li.setAttribute('data-jsonNr', i);
@@ -164,8 +180,14 @@ function handleListElement(MATCHING, img, obj, i) {
   li.setAttribute('data-path', obj.Path);
   li.setAttribute('data-stats', obj.Stats);
   li.classList.add('list-group-item');
+
+
+
+
   return li
 }
+
+var test = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentD.txt"
 
 
 
@@ -199,8 +221,17 @@ function showResultList(jsonPara) {
   }
   getSection.docCounter.html(objCount + " documents found")
 
+  var longest = termArray.reduce(
+      function(a, b) {
+          return a.length > b.length ? a : b;
+      });
+
+  $(".termBtn").width(longest.length * 8 + 'px');
+  termArray = []
 
 }
+
+
 
 
 $(document).on("click", ".list-group-item", function() {
@@ -208,7 +239,15 @@ $(document).on("click", ".list-group-item", function() {
   let path = $(this).attr("data-path")
   let stats = $(this).attr("data-stats")
   $('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
-  $('.modal-body').html("<p style='word-break: break-all;'><a href='" + path + "'>" + path + "</a><br/>" + stats + "</p><hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>")
+  $('.modal-body').html("<p style='word-break: break-all;'><a id='getDoc' value='" + path + "'>" + path + "</a><br/>" + stats + "</p><hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>")
+
+
+
+  $('#getDoc').click(function() {
+      path = $(this).attr("value")
+      ajaxDownload(path)
+
+  });
 });
 
 
@@ -220,6 +259,7 @@ $(".checkbox-menu").on("change", "input[type='checkbox']", function() {
 $(document).on('click', '.allow-focus', function(e) {
   e.stopPropagation();
 });
+
 
 
 
@@ -239,4 +279,40 @@ getSection.changeIndexBtn.on("click", function() {
 
 function logToConsole(message) {
   console.log("[" + new Date().toLocaleTimeString() + "] " + message);
+}
+
+
+
+
+function ajaxDownload(file) {
+
+  $.ajax({
+      url: "/getFile",
+      type: "POST",
+      data: {
+          "path": file
+      },
+
+      xhrFields: {
+          responseType: 'blob'
+      },
+      success: function(response, status, xhr) {
+
+          var fileName = xhr.getResponseHeader('Content-Disposition').split('"')[1].split('"')[0]
+          console.log(fileName)
+
+          var a = document.createElement('a');
+          var url = window.URL.createObjectURL(response);
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          window.URL.revokeObjectURL(url);
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+          alert(xhr.status);
+          alert(thrownError);
+      }
+
+  });
+  console.log("done")
 }
