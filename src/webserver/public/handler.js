@@ -127,7 +127,7 @@ function selectMatching(operator) {
           break
       case 2:
           btn.html("pubmed corpus")
-          btn.css("background-color", "red");
+          btn.css("background-color", "#daedd3");
           break
       case 1:
           btn.html("google corpus")
