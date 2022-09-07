@@ -22,16 +22,22 @@ public class Searcher {
     int docsLength;
 
     public Searcher(String indexDirectoryPath) throws IOException, ParseException {
-        Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
-        System.out.println(indexDirectory);
-        reader = DirectoryReader.open(indexDirectory);
-        indexSearcher = new IndexSearcher(reader);
+        setNewIndex(indexDirectoryPath);
         String embeddingDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/wordEmbeddings/";
         google = new WordEmbedding();
         google.loadModel(embeddingDir+"googleCorpus.bin");
         pubmed = new WordEmbedding();
         pubmed.loadModel(embeddingDir+"pubmed.bin");
 
+
+    }
+
+    public void setNewIndex(String indexDirectoryPath) throws IOException {
+
+        Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
+        System.out.println(indexDirectory);
+        reader = DirectoryReader.open(indexDirectory);
+        indexSearcher = new IndexSearcher(reader);
         queryParser = new QueryParser(LuceneConstants.CONTENTS, new StandardAnalyzer());
         docsLength = getDocsLength();
     }

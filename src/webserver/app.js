@@ -52,7 +52,7 @@ var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
 
 var tmpStartPath = ""
 
-function generateJsno() {
+function confJsonData() {
     var obj = new Object();
     obj.path = tmpStartPath
     var jsonString = JSON.stringify(obj);
@@ -64,14 +64,30 @@ io.sockets.on('connection', (socket) => {
     connections.push(socket);
     logToConsole('socket ' + socket.id + ' is connected. ' + connections.length + ' active');
 
-    socket.emit("conf", generateJsno())
+    socket.emit("conf", confJsonData())
 
     socket.on('newIndex', (path) => {
-
+         console.log("+++" + path)
         if (fs.existsSync(path)) {
-            middlewear("1" + generateJsno(), socket)
+            let tmpPathObj = new Object()
+            tmpPathObj.path = path
+
+
+            middlewear("1" + JSON.stringify(tmpPathObj), socket)
             tmpStartPath = path
-            generateJsno().path = path
+            //confJsonData().path = path
+            var array = []
+            try {
+                fs.readdirSync(tmpStartPath).forEach(file => {
+                    array.push(file)
+                });
+            } catch (error) {
+                socket.emit("stdout", "folder error")
+                return
+            }
+    
+            //console.log(JSON.stringify(array.Path));
+            socket.emit("stdout", JSON.stringify(array))
             return
         }
         socket.emit("stdout", "folder not found")
@@ -86,13 +102,11 @@ io.sockets.on('connection', (socket) => {
         socket.emit("autocomplete", word)
     });
 
-    socket.on('checkIndex', () => {
+/* socket.on('checkIndex', () => {
         var array = []
         try {
             fs.readdirSync(tmpStartPath).forEach(file => {
                 array.push(file)
-
-
             });
         } catch (error) {
             socket.emit("stdout", "folder error")
@@ -101,7 +115,7 @@ io.sockets.on('connection', (socket) => {
 
         //console.log(JSON.stringify(array.Path));
         socket.emit("docResultList", JSON.stringify(array))
-    })
+    })*/
 
 
     /* receive final search query */
@@ -121,17 +135,21 @@ io.sockets.on('connection', (socket) => {
 
 
 /* get final search query, send it to java backend and wait for anwser */
-async function middlewear(para, socket) {
+async function middlewear(para, socket=null) {
+   console.log()
     const sock = zmq.socket("req");
     sock.connect("tcp://127.0.0.1:5555")
     var words = para.split(/\W+/).filter(function(token) {
         return token.toLowerCase();
 
     });
+    console.log("send: " + para)
     await sock.send(para)
+
+
     sock.on('message', function(data) {
         var substring = data.toString('utf8').substring(1)
-        //logToConsole('got messsage: ' + data.toString('utf8'));
+        logToConsole('got messsage: ' + data.toString('utf8'));
         //logToConsole(substring)
         //logToConsole(data.toString('utf8')[0])
         var operator = data.toString('utf8')[0]
@@ -141,9 +159,14 @@ async function middlewear(para, socket) {
                 // console.log(0)
                 break
             case 1:
-                socket.emit("stdout", substring)
-                //console.log(1 + " " + substring)
+                socket.emit("stdout", substring) // time 
+                console.log("stdout" + substring)
                 break
+
+                case 2:
+                  console.log("path")
+                  tmpStartPath = substring
+                  break
             default:
                 //console.log("other")
                 break
@@ -214,5 +237,20 @@ var urlencodedParser = bodyParser.urlencoded({
 app.post("/getFile", urlencodedParser, (req, res) => {
     var path = req.body.path
     res.download(path);
+
+});
+
+
+_flag = false
+if(!_flag){
+   middlewear("2", null)
+   _flag = true
+}
+
+
+app.get("/getIndex", urlencodedParser, (req, res) => {
+   console.log("test")
+   console.log(tmpStartPath)
+   res.send(tmpStartPath)
 
 });

@@ -185,8 +185,13 @@ main{
     font-family:monospace;
   }
 #servermsg {
-    height: 100px;
-    color:red;
+
+    margin-top: 10px;
+    color:greenyellow;
+    padding:15px;
+    display: inline-block;
+    width: 100%;
+    background-color: black;
 }
 
 .termBtn{
@@ -208,3 +213,10 @@ main{
     text-align: center;
     cursor: pointer;
 }
+
+
+
+
+
+
+

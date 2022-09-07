@@ -1,3 +1,4 @@
+
 import {
   Section,
   RpcGetCall,
@@ -7,6 +8,8 @@ import {
 
 var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+var stdoutBuffer = ""
+const index = ""
 const getSection = new Object();
 getSection.searchButton = $(Section.searchButton)
 getSection.errorMessage = $(Section.errorMessage)
@@ -80,8 +83,19 @@ socket.on(RpcGetCall.CONF, (confData) => {
 
 
 socket.on(RpcGetCall.SERVERMESSAGE, (data) => {
-  getSection.serverMessage.html(data)
+
+  stdoutBuffer += data + "<br/>"
+  
+  getSection.serverMessage.html(stdoutBuffer)
 })
+
+
+function makeAlert(){ 
+  stdoutBuffer = ""
+
+};
+
+setInterval(makeAlert, 500);
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
@@ -110,12 +124,7 @@ getSection.searchInputField.keyup((e) => {
 })
 
 
-function removeElements() {
-  let items = document.querySelectorAll(".list-items")
-  items.forEach((item) => {
-      item.remove()
-  })
-}
+
 
 function selectMatching(operator) {
   const btn = $(document.createElement('button')).prop({
@@ -187,7 +196,6 @@ function handleListElement(MATCHING, img, obj, i) {
   return li
 }
 
-var test = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentD.txt"
 
 
 
@@ -221,6 +229,8 @@ function showResultList(jsonPara) {
   }
   getSection.docCounter.html(objCount + " documents found")
 
+  if(termArray.length > 0){
+
   var longest = termArray.reduce(
       function(a, b) {
           return a.length > b.length ? a : b;
@@ -228,7 +238,8 @@ function showResultList(jsonPara) {
 
   $(".termBtn").width(longest.length * 8 + 'px');
   termArray = []
-
+    
+}
 }
 
 
@@ -262,18 +273,23 @@ $(document).on('click', '.allow-focus', function(e) {
 
 
 
-
+/*
 function loadEntry() {
   socket.emit(RpcSendCall.CHECK_INDEX)
-
 }
+*/
 
 getSection.changeIndexBtn.on("click", function() {
-  loadEntry()
+  //loadEntry()
   let newIndex = getSection.dirPath.val();
+
+  getSection.searchResults.html("")
+  getSection.searchInputField.val("")
   socket.emit(RpcSendCall.NEW_INDEX, newIndex)
-  loadEntry()
+
+
 })
+
 
 
 
@@ -315,4 +331,33 @@ function ajaxDownload(file) {
 
   });
   console.log("done")
+}
+
+function removeElements() {
+  let items = document.querySelectorAll(".list-items")
+  items.forEach((item) => {
+      item.remove()
+  })
+}
+
+getFirstIndex()
+
+
+function getFirstIndex(){
+
+
+$.ajax({
+  url: "/getIndex",
+  type: "GET",
+  success: function(response, status, xhr) {
+    getSection.dirPath.val(response);
+    //console.log(response)
+  },
+  error: function(xhr, ajaxOptions, thrownError) {
+      //alert(xhr.status);
+      //alert(thrownError);
+  }
+
+});
+
 }

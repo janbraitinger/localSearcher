@@ -2,6 +2,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.bytedeco.javacv.FrameFilter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.zeromq.SocketType;
@@ -38,6 +39,7 @@ public class Main {
 
     private void test() throws IOException, ParseException {
         searcher = new Searcher(indexDir);
+
     }
 
     public static void main(String[] args) {
@@ -48,11 +50,11 @@ public class Main {
         try {
 
             tester = new Main();
-
-
             tester.deleteIndex();
             tester.createIndex();
             tester.test();
+
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,22 +84,45 @@ public class Main {
 
                         break;
                     case '1': //changesettings
-                        System.out.println(1 + " " + query);
+                        //TODO: Check input
+                        //TODO FilePath is wrong
+                        //TODO: Check Reading ConfFile
+
+
+
                         //String[] changeData = tester.handleConfChange(reply);
-                        JSONObject obj = new JSONObject(query);
+                        try{
+                            JSONObject obj = new JSONObject(query);
+
                         String path = obj.getString("path");
-                        tester.doIt(path);
+                        System.out.println(1 + " " + path);
+                        if(path != null){
+                            tester.doIt(path);
+
+                            tester.deleteIndex();
+                            String result = tester.createIndex();
+                            tester.searcher.setNewIndex("/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index");
+
+                            result = 1 + result;
+                            socket.send(result.toString().getBytes(ZMQ.CHARSET), 0);
+                            break;
+                        }      }catch(Exception e){
+                            System.err.println(e);
+                            socket.send(e.toString().getBytes(ZMQ.CHARSET), 0);
+                        }
 
 
-                        tester.deleteIndex();
-                        String result = tester.createIndex();
-                        result = 1 + result;
-                        socket.send(result.toString().getBytes(ZMQ.CHARSET), 0);
+
                         break;
-                    case 2://get information
-                        String[] readData = tester.handleConfRead(reply);
-                        // String confResult = cMan.readConf(readData[0], readData[1]);
-                        //socket.send(confResult.toString().getBytes(ZMQ.CHARSET), 0);
+                    case '2'://get information
+                        //String[] readData = tester.handleConfRead(reply);
+
+
+                        String confResult = tester.getConf();
+                        confResult = 2 + confResult;
+                        System.out.println(confResult);
+                        System.out.println("back");
+                        socket.send(confResult.toString().getBytes(ZMQ.CHARSET), 0);
                         break;
                     default:
                         return;
@@ -113,6 +138,10 @@ public class Main {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private String getConf() {
+        return cMan.readConf("searching", "dataPath");
     }
 
     private void doIt(String query) throws IOException, ParseException {
@@ -158,8 +187,9 @@ public class Main {
         int numIndexed;
         long startTime = System.currentTimeMillis();
         //numIndexed = indexer.createIndex(cMan.readConf("searching", "dataPath"), new TextFileFilter());
-
-        numIndexed = indexer.createIndex(dataDir, new TextFileFilter());
+        String dirPath = cMan.readConf("searching", "dataPath");
+        numIndexed = indexer.createIndex(dirPath, new TextFileFilter());
+        System.out.println("test");
         System.out.println(cMan.readConf("searching", "dataPath"));
         long endTime = System.currentTimeMillis();
         indexer.close();
