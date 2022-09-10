@@ -188,6 +188,7 @@ function handleListElement(MATCHING, img, obj, i) {
   li.setAttribute('data-title', "<p style='word-wrap: break-word;word-break: break-all;'>" + obj.Title + "</p>");
   li.setAttribute('data-path', obj.Path);
   li.setAttribute('data-stats', obj.Stats);
+  li.setAttribute('data-term', getTerm);
   li.classList.add('list-group-item');
 
 
@@ -248,11 +249,20 @@ function showResultList(jsonPara) {
 $(document).on("click", ".list-group-item", function() {
   let title = $(this).attr("data-title")
   let path = $(this).attr("data-path")
+  let term = $(this).attr("data-term")
   let stats = $(this).attr("data-stats")
+
+  console.log(stats)
+
   $('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
-  $('.modal-body').html("<p style='word-break: break-all;'><a id='getDoc' value='" + path + "'>" + path + "</a><br/>" + stats + "</p><hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>")
 
+  //$('.modal-body-path').html("hier kommt der Text")
 
+  $('.modal-body').html("<p><b>Term: </b>"+term+"</p>" + 
+  "<p><b>Date: </b> unknown </p>"+
+  "<p style='word-break: break-all;'><b>Path:</b> "+path+" <button type='button' class='btn btn-dark' id='getDoc' value='" + path + "'>View/Download</button><br/>" + "" + "</p>")
+
+//<hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>
 
   $('#getDoc').click(function() {
       path = $(this).attr("value")
@@ -320,9 +330,10 @@ function ajaxDownload(file) {
           var a = document.createElement('a');
           var url = window.URL.createObjectURL(response);
           a.href = url;
-          a.download = fileName;
+          //a.download = fileName;
           a.click();
           window.URL.revokeObjectURL(url);
+
       },
       error: function(xhr, ajaxOptions, thrownError) {
           alert(xhr.status);

@@ -1,17 +1,14 @@
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Indexer {
@@ -48,17 +45,28 @@ public class Indexer {
     private Document getDocument(File file) throws IOException {
         Document document = new Document();
 
-        //System.out.println(new File(file.getCanonicalPath()).lastModified());
 
         TextField contentField = new TextField(LuceneConstants.CONTENTS, new FileReader(file));
         TextField authorField = new TextField("author", "Jan Braitinger", TextField.Store.YES);
         TextField fileNameField = new TextField(LuceneConstants.FILE_NAME, file.getName(), TextField.Store.YES);
         TextField filePathField = new TextField(LuceneConstants.FILE_PATH, file.getCanonicalPath(), TextField.Store.YES);
 
+        FieldType ft = new FieldType();
+        ft.setIndexOptions( IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS );
+        ft.setStoreTermVectors( true );
+        ft.setStoreTermVectorOffsets( true );
+        ft.setStoreTermVectorPayloads( true );
+        ft.setStoreTermVectorPositions( true );
+        ft.setTokenized( true );
+
+        document.add(new Field(LuceneConstants.TERM_DETAILS, new String(Files.readAllBytes(Path.of(file.getPath())), "UTF-8"), ft));
+
+
         document.add(authorField);
         document.add(contentField);
         document.add(fileNameField);
         document.add(filePathField);
+
         //System.out.println(document.getFields());
         return document;
     }

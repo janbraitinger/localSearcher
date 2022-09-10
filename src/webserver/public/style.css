@@ -192,6 +192,7 @@ main{
     display: inline-block;
     width: 100%;
     background-color: black;
+    overflow-wrap: break-word;
 }
 
 .termBtn{
@@ -212,6 +213,8 @@ main{
     color:lightskyblue;
     text-align: center;
     cursor: pointer;
+    float:right;
+    margin-top: 25px;
 }
 
 

@@ -1,7 +1,9 @@
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.BytesRef;
 import org.bytedeco.javacv.FrameFilter;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,9 +42,12 @@ public class Main {
     private void test() throws IOException, ParseException {
         searcher = new Searcher(indexDir);
 
+
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+
 
 
         Main tester = null;
@@ -53,6 +58,7 @@ public class Main {
             tester.deleteIndex();
             tester.createIndex();
             tester.test();
+
 
 
 
@@ -135,7 +141,7 @@ public class Main {
             }
         } catch (Exception e) {
             System.err.println(e);
-            throw new RuntimeException(e);
+            //throw new RuntimeException(e);
         }
 
     }
@@ -241,13 +247,19 @@ public class Main {
 
         ScoreDoc[] _hits = hits.scoreDocs;
         for (ScoreDoc hit : _hits) {
+
+
+
+
             String stats = searcher.getExplanation(searchQuery, hit.doc);
             Document doc = searcher.getDocument(hit);
             int docId = hit.doc;
+            System.out.println("matching: " + searcher.getPositionOfTerms(docId, searchQuery));
             docList.add(docId);
             JSONObject entry = new JSONObject();
             entry.put("Title", doc.get(LuceneConstants.FILE_NAME));
             entry.put("Path", doc.get(LuceneConstants.FILE_PATH));
+
             entry.put("Stats", stats);
             matching.put(entry);
         }
@@ -274,7 +286,7 @@ public class Main {
                     }
                     String stats = searcher.getExplanation(searchQuery, hit.doc);
                     Document doc = searcher.getDocument(hit);
-
+                    System.out.println("google: " + searcher.getPositionOfTerms(docId, searchQuery));
 
                     JSONObject entry = new JSONObject();
                     stats = searcher.getExplanation(simW, hit.doc);
@@ -312,7 +324,7 @@ public class Main {
                     }
                     String stats = searcher.getExplanation(searchQuery, hit.doc);
                     Document doc = searcher.getDocument(hit);
-
+                    System.out.println("pubmed: " + searcher.getPositionOfTerms(docId, searchQuery));
 
                     JSONObject entry = new JSONObject();
                     stats = searcher.getExplanation(simW, hit.doc);

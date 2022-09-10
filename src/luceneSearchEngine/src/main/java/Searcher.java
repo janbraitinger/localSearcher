@@ -1,16 +1,23 @@
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.codecs.TermVectorsReader;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.spans.SpanTermQuery;
+import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.json.JSONArray;
+
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class Searcher {
 
@@ -77,12 +84,17 @@ public class Searcher {
         }
     }
 */
-
+/*
     public void writeIndexTerms() {
-     /*   String path = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/lucene_index/indexData.txt";
+      String path = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/lucene_index/indexData.txt";
         try {
+
             FileWriter fileWriter = new FileWriter(path);
-            Terms terms = MultiTerms.getTerms(reader, LuceneConstants.CONTENTS);
+
+            Terms terms;
+            terms = MultiTerms.getTerms(reader, LuceneConstants.CONTENTS);
+
+
             if (terms != null) {
                 TermsEnum iter = terms.iterator();
                 BytesRef byteRef = null;
@@ -94,9 +106,9 @@ public class Searcher {
             fileWriter.close();
         } catch (Exception e) {
             System.err.println(e);
-        }*/
+        }
     }
-/*
+
     public void printHits(String searchQuery) throws IOException, ParseException {
 
         Query query = queryParser.parse(searchQuery);
@@ -118,7 +130,7 @@ public class Searcher {
         return reader.document(docId).getField(LuceneConstants.FILE_NAME).stringValue();
     }
 
-    private int getDocsLength(){
+    private int getDocsLength() {
         return reader.maxDoc();
     }
 
@@ -138,6 +150,33 @@ public class Searcher {
         return indexSearcher.doc(scoreDoc.doc);
     }
 
+
+    public ArrayList<Integer> getPositionOfTerms(int docId, String query) throws IOException {
+        ArrayList<Integer> positonList = new ArrayList<>();
+        Terms vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
+        TermsEnum terms = vector.iterator();
+        PostingsEnum positions = null;
+        BytesRef term;
+        System.out.println(docId);
+        while ((term = terms.next()) != null) {
+            String termstr = term.utf8ToString(); // Get the text string of the term.
+            if (termstr.equals(query)) {
+                long freq = terms.totalTermFreq(); // Get the frequency of the term in the document.
+                // Here you are getting a PostingsEnum that includes only one document entry, i.e., the current document.
+                positions = terms.postings(positions, PostingsEnum.POSITIONS);
+                positions.nextDoc(); // you still need to move the cursor
+                // now accessing the occurrence position of the terms by iteratively calling nextPosition()
+                for (int i = 0; i < freq; i++) {
+                    //System.out.println(positions.nextPosition());
+                    positonList.add(positions.nextPosition());
+                }
+
+
+            }
+
+        }
+        return positonList;
+    }
 
 
 }
