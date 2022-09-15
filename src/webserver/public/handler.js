@@ -189,6 +189,8 @@ function handleListElement(MATCHING, img, obj, i) {
   li.setAttribute('data-path', obj.Path);
   li.setAttribute('data-stats', obj.Stats);
   li.setAttribute('data-term', getTerm);
+  li.setAttribute('data-preview', obj.Preview);
+  li.setAttribute('data-date', obj.Date);
   li.classList.add('list-group-item');
 
 
@@ -251,15 +253,18 @@ $(document).on("click", ".list-group-item", function() {
   let path = $(this).attr("data-path")
   let term = $(this).attr("data-term")
   let stats = $(this).attr("data-stats")
+  let preview = $(this).attr("data-preview")
+  let creationDate = $(this).attr("data-date")
 
-  console.log(stats)
+  console.log(preview)
 
   $('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
 
   //$('.modal-body-path').html("hier kommt der Text")
 
-  $('.modal-body').html("<p><b>Term: </b>"+term+"</p>" + 
-  "<p><b>Date: </b> unknown </p>"+
+  $('.modal-body').html("<p class='preivew'>"+preview+"</p>"+
+  "<p><b>Term: </b>"+term+"</p>" + 
+  "<p><b>Date: </b> "+creationDate+" </p>"+
   "<p style='word-break: break-all;'><b>Path:</b> "+path+" <button type='button' class='btn btn-dark' id='getDoc' value='" + path + "'>View/Download</button><br/>" + "" + "</p>")
 
 //<hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>

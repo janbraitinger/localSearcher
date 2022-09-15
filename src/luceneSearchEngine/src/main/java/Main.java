@@ -55,9 +55,14 @@ public class Main {
         try {
 
             tester = new Main();
+
             tester.deleteIndex();
             tester.createIndex();
             tester.test();
+            //tester.searcher.getPreviewOfSingleQuery(9,"/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentC.txt", "Coronavirus".toLowerCase(), 2);
+
+            //tester.searcher.getPositionOfTerms(9, "covid");
+
 
 
 
@@ -80,7 +85,7 @@ public class Main {
 
 
                 String operator = new String(reply, 0, 1, Charset.defaultCharset());
-                String query = new String(reply, ZMQ.CHARSET).substring(1);
+                String query = new String(reply, ZMQ.CHARSET).substring(1).toLowerCase();
 
                 System.out.println("general " + operator);
                 switch (operator.charAt(0)) {
@@ -208,11 +213,8 @@ public class Main {
 
     private JSONArray search(String searchQuery) throws IOException, ParseException {
 
-        // System.out.println(searcher.getTotalWordFreq("information"));
-        // System.out.println(searcher.getCountOfAllWords());
-        // System.out.println(searcher.getDocumentById(0).getField(LuceneConstants.FILE_NAME));
-        // System.out.println(searcher.getTFIDFScoreInCollection("information"));
-        //searcher.printHits("company");
+
+
         JSONArray finalJSON = new JSONArray();
         System.out.println(searcher.getTotalWordFreq(searchQuery));
         long startTime = System.currentTimeMillis();
@@ -224,49 +226,40 @@ public class Main {
             return finalJSON.put("error");
         }
         long endTime = System.currentTimeMillis();
-        System.out.println(hits.totalHits +
-                " documents found. Time: " + (endTime - startTime) + " ms");
+        System.out.println(hits.totalHits + " documents found. Time: " + (endTime - startTime) + " ms");
         JSONArray matching = new JSONArray();
         JSONArray embedding = new JSONArray();
         JSONArray embedding2 = new JSONArray();
-/*
-        for (ScoreDoc scoreDoc : hits.scoreDocs) {
 
-            Document doc = searcher.getDocument(scoreDoc);
-            //System.out.println(doc.get(LuceneConstants.FILE_NAME) + " by " + doc.get("author"));
-            JSONObject entry = new JSONObject();
-
-            entry.put("Title", doc.get(LuceneConstants.FILE_NAME));
-            entry.put("Path",doc.get(LuceneConstants.FILE_PATH));
-            matching.put(entry);
-        }*/
         ArrayList<Integer> docList = new ArrayList<Integer>();
-        /*for (int i = 0; i < searcher.docsLength - 1; i++) {
-            docList.add(i);
-        }*/
-
         ScoreDoc[] _hits = hits.scoreDocs;
+
         for (ScoreDoc hit : _hits) {
-
-
-
-
             String stats = searcher.getExplanation(searchQuery, hit.doc);
             Document doc = searcher.getDocument(hit);
             int docId = hit.doc;
-            System.out.println("matching: " + searcher.getPositionOfTerms(docId, searchQuery));
+            //System.out.println("matching: " + searcher.getPositionOfTerms(docId, searchQuery));
             docList.add(docId);
+            String preview = "";
             JSONObject entry = new JSONObject();
+            try {
+                 preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), searchQuery, 8);
+            }catch (Exception e){
+                preview= e.toString();
+            }
+
             entry.put("Title", doc.get(LuceneConstants.FILE_NAME));
             entry.put("Path", doc.get(LuceneConstants.FILE_PATH));
-
             entry.put("Stats", stats);
+            entry.put("Preview", preview);
+            entry.put("Date", doc.get(LuceneConstants.CREATION_DATE));
+
             matching.put(entry);
         }
 
 
         startTime = System.currentTimeMillis();
-
+        try{
         Collection<String> simWords = searcher.google.getSimWords(searchQuery, 25);
         for (String simW : simWords) {
 
@@ -286,7 +279,15 @@ public class Main {
                     }
                     String stats = searcher.getExplanation(searchQuery, hit.doc);
                     Document doc = searcher.getDocument(hit);
-                    System.out.println("google: " + searcher.getPositionOfTerms(docId, searchQuery));
+                    //System.out.println("google: " + searcher.getPositionOfTerms(docId, searchQuery));
+                    String preview = "";
+
+                    try {
+                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW, 8);
+                    }catch (Exception e){
+
+                        preview = e.toString();
+                    }
 
                     JSONObject entry = new JSONObject();
                     stats = searcher.getExplanation(simW, hit.doc);
@@ -294,6 +295,8 @@ public class Main {
                     entry.put("Title", doc.get(LuceneConstants.FILE_NAME));
                     entry.put("Path", doc.get(LuceneConstants.FILE_PATH));
                     entry.put("Stats", stats);
+                    entry.put("Preview", preview);
+                    entry.put("Date", doc.get(LuceneConstants.CREATION_DATE));
                     embedding.put(entry);
 
                 }
@@ -303,9 +306,7 @@ public class Main {
         }
 
 
-
         simWords = searcher.pubmed.getSimWords(searchQuery, 25);
-        System.out.println(simWords);
         for (String simW : simWords) {
 
             hits = searcher.search(simW);
@@ -324,14 +325,25 @@ public class Main {
                     }
                     String stats = searcher.getExplanation(searchQuery, hit.doc);
                     Document doc = searcher.getDocument(hit);
-                    System.out.println("pubmed: " + searcher.getPositionOfTerms(docId, searchQuery));
+                   // System.out.println("pubmed: " + searcher.getPositionOfTerms(docId, searchQuery));
 
                     JSONObject entry = new JSONObject();
                     stats = searcher.getExplanation(simW, hit.doc);
+                    String preview = "";
+                    try{
+                        preview = searcher.getPreviewOfSingleQuery(hit.doc,doc.get(LuceneConstants.FILE_PATH), simW, 8);
+
+                    }catch (Exception e){
+                        preview = e.toString();
+                    }
+
                     entry.put("Term", simW);
-                    entry.put("Title", doc.get(LuceneConstants.FILE_NAME));
+                    entry.put("Titl e", doc.get(LuceneConstants.FILE_NAME));
                     entry.put("Path", doc.get(LuceneConstants.FILE_PATH));
                     entry.put("Stats", stats);
+                    entry.put("Preview", preview);
+                    entry.put("Date", doc.get(LuceneConstants.CREATION_DATE));
+
                     embedding2.put(entry);
 
                 }
@@ -340,15 +352,20 @@ public class Main {
             }
         }
 
+        }catch (Exception e){
+            System.out.println("embedding: " + e);
+        }
+
+
 
         finalJSON.put(0, matching);
         finalJSON.put(1, embedding);
         finalJSON.put(2, embedding2);
         endTime = System.currentTimeMillis();
-        System.out.println((endTime - startTime) + " ms was needed for embeddings");
-        for(Object i : finalJSON){
+        System.out.println((endTime - startTime) + " ms was needed for finding files");
+       /* for(Object i : finalJSON){
             System.out.println(i);
-        }
+        }*/
         return finalJSON;
     }
 

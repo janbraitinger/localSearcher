@@ -6,10 +6,10 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class Indexer {
 
@@ -50,6 +50,16 @@ public class Indexer {
         TextField authorField = new TextField("author", "Jan Braitinger", TextField.Store.YES);
         TextField fileNameField = new TextField(LuceneConstants.FILE_NAME, file.getName(), TextField.Store.YES);
         TextField filePathField = new TextField(LuceneConstants.FILE_PATH, file.getCanonicalPath(), TextField.Store.YES);
+        BasicFileAttributes attr = Files.readAttributes(Path.of(file.getPath()), BasicFileAttributes.class);
+        TextField creationDate = new TextField(LuceneConstants.CREATION_DATE, String.valueOf(attr.creationTime()), Field.Store.YES);
+        /*
+        Vector datesVec = new Vector();
+        datesVec.add(attr.creationTime());
+        datesVec.add(attr.lastAccessTime());
+        datesVec.add(attr.lastModifiedTime());
+         */
+
+
 
         FieldType ft = new FieldType();
         ft.setIndexOptions( IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS );
@@ -60,12 +70,13 @@ public class Indexer {
         ft.setTokenized( true );
 
         document.add(new Field(LuceneConstants.TERM_DETAILS, new String(Files.readAllBytes(Path.of(file.getPath())), "UTF-8"), ft));
-
+        document.add(new TextField("abc", new String(Files.readAllBytes(Path.of(file.getPath()))), Field.Store.YES));
 
         document.add(authorField);
         document.add(contentField);
         document.add(fileNameField);
         document.add(filePathField);
+        document.add(creationDate);
 
         //System.out.println(document.getFields());
         return document;
