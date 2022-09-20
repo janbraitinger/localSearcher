@@ -1,4 +1,3 @@
-
 import {
   Section,
   RpcGetCall,
@@ -14,17 +13,21 @@ const dataTable = $('#aexample').DataTable({
   paging: false,
   info: false,
   responsive: true,
-  order: [[3, 'desc']],
+  order: [
+      [3, 'desc']
+  ],
   "autoWidth": false,
   "oLanguage": {
-    "sSearch": "Filter Data"
+      "sSearch": "Filter Data"
   },
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
-  columnDefs: [
-    { className: 'text-center', targets: [1,2,3] },
- 
+  columnDefs: [{
+          className: 'text-center',
+          targets: [1, 2, 3]
+      },
+
 
       {
           target: 4,
@@ -36,9 +39,9 @@ const dataTable = $('#aexample').DataTable({
           visible: false,
           searchable: false,
       },
-  
+
   ]
-  
+
 });
 const index = ""
 const getSection = new Object();
@@ -111,7 +114,7 @@ socket.on(RpcGetCall.RESULTLIST, (data) => {
   count = 1
   showResultList(docs)
   getSection.loader.hide()
- 
+
 });
 
 // conf data could contain multiple elements in future
@@ -124,12 +127,12 @@ socket.on(RpcGetCall.CONF, (confData) => {
 socket.on(RpcGetCall.SERVERMESSAGE, (data) => {
 
   stdoutBuffer += data + "<br/>"
-  
+
   getSection.serverMessage.html(stdoutBuffer)
 })
 
 
-function makeAlert(){ 
+function makeAlert() {
   stdoutBuffer = ""
 
 };
@@ -174,7 +177,7 @@ function selectMatching(operator) {
       case 1:
           return "#e6d3ed"
       default:
-        return "#fff"
+          return "#fff"
   }
 }
 
@@ -203,32 +206,32 @@ function handleListElement(MATCHING, img, obj, i) {
   }
 
   termArray.push(getTerm)
-  
 
-  let termButton = "<button class='termBtn' style='background-color:"+selectMatching(MATCHING)+";'>" +getTerm + "</button>"
-  let weight = getWeight+obj.Similarity
+
+  let termButton = "<button class='termBtn' style='background-color:" + selectMatching(MATCHING) + ";'>" + getTerm + "</button>"
+  let weight = getWeight + obj.Similarity
   let weightResult = parseFloat(weight).toFixed(2);
 
- dataTable.row.add([obj.Title, obj.Date, termButton, weightResult, obj.Path, obj.Preview]).draw(true);
+  dataTable.row.add([obj.Title, obj.Date, termButton, weightResult, obj.Path, obj.Preview]).draw(true);
   $('#aexample').show()
 
 
-  
+
 
 }
 
 
 
-$('#aexample tbody').on('click', 'tr', function () {
+$('#aexample tbody').on('click', 'tr', function() {
   $(".modal-body div span").text("");
   var path = dataTable.row(this).data()[4];
-        $(".modal-title").html(dataTable.row(this).data()[0]);
-        $(".path span").html(dataTable.row(this).data()[4]);
-        $(".term span").html(dataTable.row(this).data()[2]);
-        $(".preview span").html(dataTable.row(this).data()[5]);
-        $('.btn-primary').click(function() { //downloadButton on modal
-          ajaxDownload(path)
-      });
+  $(".modal-title").html(dataTable.row(this).data()[0]);
+  $(".path span").html(dataTable.row(this).data()[4]);
+  $(".term span").html(dataTable.row(this).data()[2]);
+  $(".preview span").html(dataTable.row(this).data()[5]);
+  $('.btn-primary').click(function() { //downloadButton on modal
+      ajaxDownload(path)
+  });
 
   $("#amyModal").modal("show");
 });
@@ -266,48 +269,48 @@ function showResultList(jsonPara) {
   }
   getSection.docCounter.html(objCount + " documents found")
 
-  if(termArray.length > 0){
+  if (termArray.length > 0) {
 
-  var longest = termArray.reduce(
-      function(a, b) {
-          return a.length > b.length ? a : b;
-      });
+      var longest = termArray.reduce(
+          function(a, b) {
+              return a.length > b.length ? a : b;
+          });
 
-  $(".termBtn").width(longest.length * 8 + 'px');
-  termArray = []
-    
-}
+      $(".termBtn").width(longest.length * 8 + 'px');
+      termArray = []
+
+  }
 }
 
 
 
 /*
 $(document).on("click", ".list-group-item", function() {
-  let title = $(this).attr("data-title")
-  let path = $(this).attr("data-path")
-  let term = $(this).attr("data-term")
-  let stats = $(this).attr("data-stats")
-  let preview = $(this).attr("data-preview")
-  let creationDate = $(this).attr("data-date")
+let title = $(this).attr("data-title")
+let path = $(this).attr("data-path")
+let term = $(this).attr("data-term")
+let stats = $(this).attr("data-stats")
+let preview = $(this).attr("data-preview")
+let creationDate = $(this).attr("data-date")
 
-  console.log(preview)
+console.log(preview)
 
-  $('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
+$('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
 
-  //$('.modal-body-path').html("hier kommt der Text")
+//$('.modal-body-path').html("hier kommt der Text")
 
-  $('.modal-body').html("<p class='preivew'>"+preview+"</p>"+
-  "<p><b>Term: </b>"+term+"</p>" + 
-  "<p><b>Date: </b> "+creationDate+" </p>"+
-  "<p style='word-break: break-all;'><b>Path:</b> "+path+" <button type='button' class='btn btn-dark' id='getDoc' value='" + path + "'>View/Download</button><br/>" + "" + "</p>")
+$('.modal-body').html("<p class='preivew'>"+preview+"</p>"+
+"<p><b>Term: </b>"+term+"</p>" + 
+"<p><b>Date: </b> "+creationDate+" </p>"+
+"<p style='word-break: break-all;'><b>Path:</b> "+path+" <button type='button' class='btn btn-dark' id='getDoc' value='" + path + "'>View/Download</button><br/>" + "" + "</p>")
 
 //<hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>
 
-  $('#getDoc').click(function() {
-      path = $(this).attr("value")
-      ajaxDownload(path)
+$('#getDoc').click(function() {
+    path = $(this).attr("value")
+    ajaxDownload(path)
 
-  });
+});
 });
 */
 
@@ -324,7 +327,7 @@ $(document).on('click', '.allow-focus', function(e) {
 
 /*
 function loadEntry() {
-  socket.emit(RpcSendCall.CHECK_INDEX)
+socket.emit(RpcSendCall.CHECK_INDEX)
 }
 */
 
@@ -369,10 +372,10 @@ function ajaxDownload(file) {
           var a = document.createElement('a');
           var url = window.URL.createObjectURL(response);
           a.href = url;
-         // a.download = fileName;
+          // a.download = fileName;
           a.setAttribute('target', '_blank');
           a.click();
- 
+
           //window.URL.revokeObjectURL(url);
           //window.open(url, '_blank');
 
@@ -396,64 +399,62 @@ function removeElements() {
 getFirstIndex()
 
 
-function getFirstIndex(){
+function getFirstIndex() {
 
 
-$.ajax({
-  url: "/getIndex",
-  type: "GET",
-  success: function(response, status, xhr) {
-    getSection.dirPath.val(response);
-    //console.log(response)
-  },
-  error: function(xhr, ajaxOptions, thrownError) {
-      //alert(xhr.status);
-      //alert(thrownError);
-  }
+  $.ajax({
+      url: "/getIndex",
+      type: "GET",
+      success: function(response, status, xhr) {
+          getSection.dirPath.val(response);
+          //console.log(response)
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+          //alert(xhr.status);
+          //alert(thrownError);
+      }
 
-});
+  });
 }
 
 
 
 
-  var minDate, maxDate;
- 
-  // Custom filtering function which will search data in column four between two values
-  $.fn.dataTable.ext.search.push(
-      function( settings, data, dataIndex ) {
-          var min = minDate.val();
-          var max = maxDate.val();
-          var date = new Date( data[1] );
-          if (
-              ( min === null && max === null ) ||
-              ( min === null && date <= max ) ||
-              ( min <= date   && max === null ) ||
-              ( min <= date   && date <= max )
-          ) {
-              return true;
-          }
-          return false;
-      }
-  );
-   
-  $(document).ready(function() {
-      // Create date inputs
-      minDate = new DateTime($('#min'), {
-          format: 'MMMM Do YYYY'
-      });
-      maxDate = new DateTime($('#max'), {
-          format: 'MMMM Do YYYY'
-      });
-   
-      // DataTables initialisation
-      //var table = $('#example').DataTable();
-   
-      // Refilter the table
-      $('#min, #max').on('change', function () {
-          dataTable.draw();
-          console.log("drwaew")
-      });
-  });
-  
+var minDate, maxDate;
 
+// Custom filtering function which will search data in column four between two values
+$.fn.dataTable.ext.search.push(
+  function(settings, data, dataIndex) {
+      var min = minDate.val();
+      var max = maxDate.val();
+      var date = new Date(data[1]);
+      if (
+          (min === null && max === null) ||
+          (min === null && date <= max) ||
+          (min <= date && max === null) ||
+          (min <= date && date <= max)
+      ) {
+          return true;
+      }
+      return false;
+  }
+);
+
+$(document).ready(function() {
+  // Create date inputs
+  minDate = new DateTime($('#min'), {
+      format: 'MMMM Do YYYY'
+  });
+  maxDate = new DateTime($('#max'), {
+      format: 'MMMM Do YYYY'
+  });
+
+  // DataTables initialisation
+  //var table = $('#example').DataTable();
+
+  // Refilter the table
+  $('#min, #max').on('change', function() {
+      dataTable.draw();
+      console.log("drwaew")
+  });
+});
