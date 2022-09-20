@@ -9,8 +9,38 @@ import {
 var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
+const dataTable = $('#aexample').DataTable({
+  searching: true,
+  paging: false,
+  info: false,
+  responsive: true,
+  "autoWidth": false,
+  "oLanguage": {
+    "sSearch": "Filter Data"
+  },
+  "iDisplayLength": -1,
+  "sPaginationType": "full_numbers",
+  "ordering": true,
+  columnDefs: [
+    { className: 'text-center', targets: [2] },
+
+      {
+          target: 3,
+          visible: false,
+          searchable: false,
+      },
+      {
+          target: 4,
+          visible: false,
+          searchable: false,
+      },
+  
+  ]
+  
+});
 const index = ""
 const getSection = new Object();
+const socket = io.connect('http://localhost:3000');
 getSection.searchButton = $(Section.searchButton)
 getSection.errorMessage = $(Section.errorMessage)
 getSection.searchInputField = $(Section.searchInputField)
@@ -32,6 +62,7 @@ if (isIOS) {
   getSection.errorMessage.html("[error: no ios support]")
   getSection.searchInputField.prop('disabled', true)
 }
+
 
 
 /* socket.io section */
@@ -66,13 +97,18 @@ socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
 $("#list").on("click", function(e) {
   getSection.searchInputField.val(e.target.innerText)
   removeElements()
+
 });
+
+
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
+  dataTable.clear()
   showResultList(docs)
   getSection.loader.hide()
+ 
 });
 
 // conf data could contain multiple elements in future
@@ -127,28 +163,16 @@ getSection.searchInputField.keyup((e) => {
 
 
 function selectMatching(operator) {
-  const btn = $(document.createElement('button')).prop({
-      type: 'button',
-      class: 'wordembeddingButton'
-  })
-
   switch (operator) {
       case 0:
-          btn.html("direct matching")
           break
       case 2:
-          btn.html("pubmed corpus")
-          btn.css("background-color", "#daedd3");
-          break
+          return "#daedd3"
       case 1:
-          btn.html("google corpus")
-          btn.css("background-color", "#e6d3ed");
-          break
+          return "#e6d3ed"
       default:
-          btn.html("unknown")
+        return "#fff"
   }
-
-  return btn
 }
 
 
@@ -171,38 +195,41 @@ function handleListElement(MATCHING, img, obj, i) {
   } catch {
       getTerm = "unknown"
   }
-  let btn = $(document.createElement('button')).prop({
-      type: 'button',
-      class: 'termBtn'
-  })
+
   termArray.push(getTerm)
-  btn.html(getTerm)
-  const li = document.createElement("li");
-  li.appendChild(img)
-  li.appendChild(document.createTextNode(obj.Title));
-  selectMatching(MATCHING).appendTo(li)
-  btn.appendTo(li)
-  li.setAttribute('data-toggle', 'modal');
-  li.setAttribute('data-target', '#myModal');
-  li.setAttribute('data-jsonNr', i);
-  li.setAttribute('data-title', "<p style='word-wrap: break-word;word-break: break-all;'>" + obj.Title + "</p>");
-  li.setAttribute('data-path', obj.Path);
-  li.setAttribute('data-stats', obj.Stats);
-  li.setAttribute('data-term', getTerm);
-  li.setAttribute('data-preview', obj.Preview);
-  li.setAttribute('data-date', obj.Date);
-  li.classList.add('list-group-item');
+  
+
+  let termButton = "<button class='termBtn' style='background-color:"+selectMatching(MATCHING)+";'>" +getTerm + "</button>"
 
 
+ dataTable.row.add([obj.Title, obj.Date, termButton, obj.Path, obj.Preview]).draw(true);
+  $('#aexample').show()
 
 
-  return li
+  
+
 }
 
 
 
+$('#aexample tbody').on('click', 'tr', function () {
+  $(".modal-body div span").text("");
+  var path = dataTable.row(this).data()[3];
+        $(".modal-title").html(dataTable.row(this).data()[0]);
+        $(".path span").html(dataTable.row(this).data()[3]);
+        $(".term span").html(dataTable.row(this).data()[2]);
+        $(".preview span").html(dataTable.row(this).data()[4]);
+        $('.btn-primary').click(function() { //downloadButton on modal
+          ajaxDownload(path)
+      });
+
+  $("#amyModal").modal("show");
+});
+
 
 function showResultList(jsonPara) {
+
+
 
 
   getSection.searchResults.html("")
@@ -247,7 +274,7 @@ function showResultList(jsonPara) {
 
 
 
-
+/*
 $(document).on("click", ".list-group-item", function() {
   let title = $(this).attr("data-title")
   let path = $(this).attr("data-path")
@@ -275,7 +302,7 @@ $(document).on("click", ".list-group-item", function() {
 
   });
 });
-
+*/
 
 $(".checkbox-menu").on("change", "input[type='checkbox']", function() {
   $(this).closest("li").toggleClass("active", this.checked);
@@ -335,14 +362,17 @@ function ajaxDownload(file) {
           var a = document.createElement('a');
           var url = window.URL.createObjectURL(response);
           a.href = url;
-          //a.download = fileName;
+         // a.download = fileName;
+          a.setAttribute('target', '_blank');
           a.click();
-          window.URL.revokeObjectURL(url);
+ 
+          //window.URL.revokeObjectURL(url);
+          //window.open(url, '_blank');
 
       },
       error: function(xhr, ajaxOptions, thrownError) {
-          alert(xhr.status);
-          alert(thrownError);
+          console.log(xhr.status);
+          console.log(thrownError);
       }
 
   });
@@ -375,5 +405,48 @@ $.ajax({
   }
 
 });
-
 }
+
+
+
+
+  var minDate, maxDate;
+ 
+  // Custom filtering function which will search data in column four between two values
+  $.fn.dataTable.ext.search.push(
+      function( settings, data, dataIndex ) {
+          var min = minDate.val();
+          var max = maxDate.val();
+          var date = new Date( data[1] );
+          if (
+              ( min === null && max === null ) ||
+              ( min === null && date <= max ) ||
+              ( min <= date   && max === null ) ||
+              ( min <= date   && date <= max )
+          ) {
+              return true;
+          }
+          return false;
+      }
+  );
+   
+  $(document).ready(function() {
+      // Create date inputs
+      minDate = new DateTime($('#min'), {
+          format: 'MMMM Do YYYY'
+      });
+      maxDate = new DateTime($('#max'), {
+          format: 'MMMM Do YYYY'
+      });
+   
+      // DataTables initialisation
+      //var table = $('#example').DataTable();
+   
+      // Refilter the table
+      $('#min, #max').on('change', function () {
+          dataTable.draw();
+          console.log("drwaew")
+      });
+  });
+  
+

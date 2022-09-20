@@ -196,7 +196,6 @@ main{
 }
 
 .termBtn{
-    float:right;
     border:0px;
     margin-right: 5px;
     height: 25px;
@@ -206,8 +205,14 @@ main{
     padding-left: 5px;
     padding-right: 5px;
     color:darkgray;
+
+
+   
 }
 
+#aexample_filter{
+    display: none;
+}
 
 #getDoc{
     color:lightskyblue;
@@ -228,6 +233,28 @@ main{
     
 }
 
+#aexample{
+   display: none;
+}
 
 
 
+table#aexample.dataTable td {
+    word-break: break-word;
+  }
+
+
+table#aexample.dataTable tbody tr:hover {
+    background-color: rgba(47, 103, 142, 0.2) !important;
+    border: 0;
+    cursor: pointer;
+  }
+
+
+  .modal-body div{float:left; width: 100%; padding: 2px;}
+.modal-body div p{float:left; width: 20%; }
+.modal-body div span{float:left; width: 80%; word-break: break-all;}
+
+.path span{
+    color: darkblue;
+}

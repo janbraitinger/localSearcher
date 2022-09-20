@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class Indexer {
 
@@ -45,19 +47,15 @@ public class Indexer {
     private Document getDocument(File file) throws IOException {
         Document document = new Document();
 
-
         TextField contentField = new TextField(LuceneConstants.CONTENTS, new FileReader(file));
         TextField authorField = new TextField("author", "Jan Braitinger", TextField.Store.YES);
         TextField fileNameField = new TextField(LuceneConstants.FILE_NAME, file.getName(), TextField.Store.YES);
         TextField filePathField = new TextField(LuceneConstants.FILE_PATH, file.getCanonicalPath(), TextField.Store.YES);
         BasicFileAttributes attr = Files.readAttributes(Path.of(file.getPath()), BasicFileAttributes.class);
-        TextField creationDate = new TextField(LuceneConstants.CREATION_DATE, String.valueOf(attr.creationTime()), Field.Store.YES);
-        /*
-        Vector datesVec = new Vector();
-        datesVec.add(attr.creationTime());
-        datesVec.add(attr.lastAccessTime());
-        datesVec.add(attr.lastModifiedTime());
-         */
+
+        DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String creationTime = sdf.format(attr.creationTime().toMillis());
+        TextField creationDate = new TextField(LuceneConstants.CREATION_DATE, creationTime, Field.Store.YES);
 
 
 
@@ -70,7 +68,7 @@ public class Indexer {
         ft.setTokenized( true );
 
         document.add(new Field(LuceneConstants.TERM_DETAILS, new String(Files.readAllBytes(Path.of(file.getPath())), "UTF-8"), ft));
-        document.add(new TextField("abc", new String(Files.readAllBytes(Path.of(file.getPath()))), Field.Store.YES));
+        document.add(new TextField(LuceneConstants.HIGHLIGHT_INDEX, new String(Files.readAllBytes(Path.of(file.getPath()))), Field.Store.YES));
 
         document.add(authorField);
         document.add(contentField);
@@ -78,7 +76,6 @@ public class Indexer {
         document.add(filePathField);
         document.add(creationDate);
 
-        //System.out.println(document.getFields());
         return document;
     }
 
