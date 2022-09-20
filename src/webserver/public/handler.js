@@ -14,6 +14,7 @@ const dataTable = $('#aexample').DataTable({
   paging: false,
   info: false,
   responsive: true,
+  order: [[3, 'desc']],
   "autoWidth": false,
   "oLanguage": {
     "sSearch": "Filter Data"
@@ -22,15 +23,16 @@ const dataTable = $('#aexample').DataTable({
   "sPaginationType": "full_numbers",
   "ordering": true,
   columnDefs: [
-    { className: 'text-center', targets: [2] },
+    { className: 'text-center', targets: [1,2,3] },
+ 
 
       {
-          target: 3,
+          target: 4,
           visible: false,
           searchable: false,
       },
       {
-          target: 4,
+          target: 5,
           visible: false,
           searchable: false,
       },
@@ -106,6 +108,7 @@ $("#list").on("click", function(e) {
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
   dataTable.clear()
+  count = 1
   showResultList(docs)
   getSection.loader.hide()
  
@@ -186,23 +189,27 @@ getSection.filterButton.click(() => {
 })
 
 
-
+var count = 1
 
 function handleListElement(MATCHING, img, obj, i) {
   var getTerm = ""
+  var getWeight = ""
   try {
       getTerm = obj.Stats.split("contents:")[1].split(" in ")[0]
+      getWeight = obj.Stats.split(" ")[0]
   } catch {
       getTerm = "unknown"
+      getWeight = "unknown"
   }
 
   termArray.push(getTerm)
   
 
   let termButton = "<button class='termBtn' style='background-color:"+selectMatching(MATCHING)+";'>" +getTerm + "</button>"
+  let weight = getWeight+obj.Similarity
+  let weightResult = parseFloat(weight).toFixed(2);
 
-
- dataTable.row.add([obj.Title, obj.Date, termButton, obj.Path, obj.Preview]).draw(true);
+ dataTable.row.add([obj.Title, obj.Date, termButton, weightResult, obj.Path, obj.Preview]).draw(true);
   $('#aexample').show()
 
 
@@ -214,11 +221,11 @@ function handleListElement(MATCHING, img, obj, i) {
 
 $('#aexample tbody').on('click', 'tr', function () {
   $(".modal-body div span").text("");
-  var path = dataTable.row(this).data()[3];
+  var path = dataTable.row(this).data()[4];
         $(".modal-title").html(dataTable.row(this).data()[0]);
-        $(".path span").html(dataTable.row(this).data()[3]);
+        $(".path span").html(dataTable.row(this).data()[4]);
         $(".term span").html(dataTable.row(this).data()[2]);
-        $(".preview span").html(dataTable.row(this).data()[4]);
+        $(".preview span").html(dataTable.row(this).data()[5]);
         $('.btn-primary').click(function() { //downloadButton on modal
           ajaxDownload(path)
       });

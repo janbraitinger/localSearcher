@@ -207,7 +207,7 @@ public class Main {
         JSONArray googleCorpusMatches = new JSONArray();
         JSONArray pubMedCorpusMatches = new JSONArray();
         TopDocs hits;
-        Collection<String> embeddingTerms;
+        ArrayList<SimilarObject> embeddingTerms;
 
 
         long startTime = System.currentTimeMillis();
@@ -238,16 +238,20 @@ public class Main {
             } catch (Exception e) {
                 preview = e.toString();
             }
-            directMatches.put(addToMessage(searchQuery, stats, doc, preview));
+            SimilarObject matchinQuery = new SimilarObject();
+            matchinQuery.term = searchQuery;
+            matchinQuery.similarity = 1;
+            directMatches.put(addToMessage(matchinQuery, stats, doc, preview));
         }
 
 
 
         embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
 
-        for (String simW : embeddingTerms) {
 
-            hits = searcher.search(simW);
+        for (SimilarObject simW : embeddingTerms) {
+
+            hits = searcher.search(simW.term);
             _hits = hits.scoreDocs;
 
             for (ScoreDoc hit : _hits) {
@@ -267,14 +271,14 @@ public class Main {
                     String preview = "";
 
                     try {
-                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW, 8);
+                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW.term, 8);
                     } catch (Exception e) {
 
                         preview = e.toString();
                     }
 
 
-                    stats = searcher.getExplanation(simW, hit.doc);
+                    stats = searcher.getExplanation(simW.term, hit.doc);
                     googleCorpusMatches.put(addToMessage(simW, stats, doc, preview));
 
                 }
@@ -285,9 +289,9 @@ public class Main {
 
 
         embeddingTerms = searcher.pubmed.getSimWords(searchQuery, 25);
-        for (String simW : embeddingTerms) {
+        for (SimilarObject simW : embeddingTerms) {
 
-            hits = searcher.search(simW);
+            hits = searcher.search(simW.term);
             _hits = hits.scoreDocs;
 
             for (ScoreDoc hit : _hits) {
@@ -305,10 +309,10 @@ public class Main {
                     Document doc = searcher.getDocument(hit);
 
 
-                    stats = searcher.getExplanation(simW, hit.doc);
+                    stats = searcher.getExplanation(simW.term, hit.doc);
                     String preview = "";
                     try {
-                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW, 8);
+                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW.term, 8);
 
                     } catch (Exception e) {
                         preview = e.toString();
@@ -339,9 +343,10 @@ public class Main {
     }
 
 
-    private JSONObject addToMessage(String simW, String stats, Document doc, String preview) {
+    private JSONObject addToMessage(SimilarObject simW, String stats, Document doc, String preview) {
         JSONObject messageSubItem = new JSONObject();
-        messageSubItem.put("Term", simW);
+        messageSubItem.put("Term", simW.term);
+        messageSubItem.put("Similarity", simW.similarity);
         messageSubItem.put("Title", doc.get(LuceneConstants.FILE_NAME));
         messageSubItem.put("Path", doc.get(LuceneConstants.FILE_PATH));
         messageSubItem.put("Stats", stats);
