@@ -14,7 +14,7 @@ const dataTable = $('#aexample').DataTable({
   info: false,
   responsive: true,
   order: [
-      [3, 'desc']
+      [4, 'desc']
   ],
   "autoWidth": false,
   "oLanguage": {
@@ -30,12 +30,12 @@ const dataTable = $('#aexample').DataTable({
 
 
       {
-          target: 4,
+          target: 5,
           visible: false,
           searchable: false,
       },
       {
-          target: 5,
+          target: 6,
           visible: false,
           searchable: false,
       },
@@ -111,8 +111,9 @@ $("#list").on("click", function(e) {
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
   dataTable.clear()
-  count = 1
+  canvasId = 0
   showResultList(docs)
+
   getSection.loader.hide()
 
 });
@@ -192,7 +193,7 @@ getSection.filterButton.click(() => {
 })
 
 
-var count = 1
+var canvasId = 0
 
 function handleListElement(MATCHING, img, obj, i) {
   var getTerm = ""
@@ -212,23 +213,59 @@ function handleListElement(MATCHING, img, obj, i) {
   let weight = getWeight + obj.Similarity
   let weightResult = parseFloat(weight).toFixed(2);
 
-  dataTable.row.add([obj.Title, obj.Date, termButton, weightResult, obj.Path, obj.Preview]).draw(true);
+
+
+  let canvas = "<canvas class='weightCanvas' id='myCanvas"+canvasId +"'>Your browser does not support the HTML5 canvas tag.</canvas>"
+
+  dataTable.row.add([obj.Title, obj.Date, termButton, canvas, weightResult, obj.Path, obj.Preview]).draw(true);
+
   $('#aexample').show()
+  fillWeightCanvers(weightResult)
+
+}
+
+function logslider(position) {
+  // position will be between 0 and 100
+  var minp = 0;
+  var maxp = 5;
+
+
+  var minv = Math.log(10);
+  var maxv = Math.log(10000);
+
+  // calculate adjustment factor
+  var scale = (maxv-minv) / (maxp-minp);
+
+  return Math.exp(minv + scale*(position-minp));
+}
 
 
 
+function fillWeightCanvers(weight){
 
+
+  //var canvases = document.getElementsByTagName('canvas');
+  //for( var i=0; i<canvases.length; i++){
+    let canvas = document.getElementById("myCanvas"+canvasId)
+    //let ctx = canvases[i].getContext('2d');
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'lightblue'
+    ctx.fillRect(20, 20,logslider(weight), 100);
+    
+    ctx.stroke();    
+    canvasId++
+//}
 }
 
 
 
 $('#aexample tbody').on('click', 'tr', function() {
   $(".modal-body div span").text("");
-  var path = dataTable.row(this).data()[4];
+  var path = dataTable.row(this).data()[5];
   $(".modal-title").html(dataTable.row(this).data()[0]);
-  $(".path span").html(dataTable.row(this).data()[4]);
+  $(".path span").html(dataTable.row(this).data()[5]);
   $(".term span").html(dataTable.row(this).data()[2]);
-  $(".preview span").html(dataTable.row(this).data()[5]);
+  $(".preview span").html(dataTable.row(this).data()[6]);
   $('.btn-primary').click(function() { //downloadButton on modal
       ajaxDownload(path)
   });
@@ -457,4 +494,4 @@ $(document).ready(function() {
       dataTable.draw();
       console.log("drwaew")
   });
-});
+}); 

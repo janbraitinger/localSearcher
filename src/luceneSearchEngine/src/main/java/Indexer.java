@@ -1,11 +1,15 @@
+import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,8 +50,18 @@ public class Indexer {
 
     private Document getDocument(File file) throws IOException {
         Document document = new Document();
+        String content = null;
+        if(checkFileName(file).equals("pdf")) {
+            content = getText(file);
+        } if(checkFileName(file).equals("txt")){
+            content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        }
 
-        TextField contentField = new TextField(LuceneConstants.CONTENTS, new FileReader(file));
+
+
+
+
+        TextField contentField = new TextField(LuceneConstants.CONTENTS, content, Field.Store.YES);
         TextField authorField = new TextField("author", "Jan Braitinger", TextField.Store.YES);
         TextField fileNameField = new TextField(LuceneConstants.FILE_NAME, file.getName(), TextField.Store.YES);
         TextField filePathField = new TextField(LuceneConstants.FILE_PATH, file.getCanonicalPath(), TextField.Store.YES);
@@ -67,6 +81,9 @@ public class Indexer {
         ft.setStoreTermVectorPositions( true );
         ft.setTokenized( true );
 
+        //document.add(new Field(LuceneConstants.TERM_DETAILS, content, FieldType.LegacyNumericType.DOUBLE), ft));
+
+
         document.add(new Field(LuceneConstants.TERM_DETAILS, new String(Files.readAllBytes(Path.of(file.getPath())), "UTF-8"), ft));
         document.add(new TextField(LuceneConstants.HIGHLIGHT_INDEX, new String(Files.readAllBytes(Path.of(file.getPath()))), Field.Store.YES));
 
@@ -76,11 +93,29 @@ public class Indexer {
         document.add(filePathField);
         document.add(creationDate);
 
+
         return document;
     }
 
+    private String checkFileName(File file){
+        String fileName = file.getName();
+        int index = fileName.lastIndexOf('.');
+        if(index > 0) {
+            String extension = fileName.substring(index + 1);
+            return extension;
+        }
+        return "";
+    }
+
+    private String getText(File pdfFile) throws IOException {
+        PDDocument doc = PDDocument.load(pdfFile);
+        String result = new PDFTextStripper().getText(doc);
+        doc.close();
+        return result;
+    }
+
     private void indexFile(File file) throws IOException {
-        System.out.println("Indexing " + file.getCanonicalPath());
+        Console.print("Indexing " + file.getCanonicalPath(),0);
         Document document = getDocument(file);
         writer.addDocument(document);
     }

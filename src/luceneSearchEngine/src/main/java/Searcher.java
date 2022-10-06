@@ -1,3 +1,5 @@
+import org.apache.arrow.flatbuf.Int;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -10,10 +12,18 @@ import org.apache.lucene.search.highlight.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.opencv.core.Mat;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Searcher {
 
@@ -21,16 +31,16 @@ public class Searcher {
     IndexSearcher indexSearcher;
     QueryParser queryParser;
     Query query;
-    WordEmbedding google, pubmed;
+    //WordEmbedding google, pubmed;
     int docsLength;
 
     public Searcher(String indexDirectoryPath) throws IOException, ParseException {
         setNewIndex(indexDirectoryPath);
         String embeddingDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/wordEmbeddings/";
-        google = new WordEmbedding();
-        google.loadModel(embeddingDir + "googleCorpus.bin");
-        pubmed = new WordEmbedding();
-        pubmed.loadModel(embeddingDir + "pubmed.bin");
+        //google = new WordEmbedding();
+        //google.loadModel(embeddingDir + "googleCorpus.bin");
+        //pubmed = new WordEmbedding();
+        //pubmed.loadModel(embeddingDir + "pubmed.bin");
 
 
     }
@@ -38,7 +48,6 @@ public class Searcher {
     public void setNewIndex(String indexDirectoryPath) throws IOException {
 
         Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
-        System.out.println(indexDirectory);
         reader = DirectoryReader.open(indexDirectory);
         indexSearcher = new IndexSearcher(reader);
         queryParser = new QueryParser(LuceneConstants.CONTENTS, new StandardAnalyzer());
@@ -100,7 +109,6 @@ public class Searcher {
     */
 
 
-
     public String getExplanation(String _query, int docID) throws IOException, ParseException {
         String after = "";
         Query query = queryParser.parse(_query);
@@ -148,7 +156,79 @@ public class Searcher {
 
     }
 
-    public ArrayList<Integer> getPositionOfTerms(int docId, String query) throws IOException {
+    public Integer calcIndexDistance(int docId, String[] query) throws IOException {
+        ArrayList indexe = new ArrayList();
+        System.out.println(query);
+        for (int i = 0; i < query.length; i++) {
+            ArrayList tmpIndexes = getPositionOfTerms(docId, query[i]);
+            for (Object index : tmpIndexes) {
+
+            }
+        }
+
+        List<List<Integer>> lst = new ArrayList<List<Integer>>();
+
+        lst.add(Arrays.asList(4, 5, 6));
+        lst.add(Arrays.asList(1, 2, 3));
+        lst.add(Arrays.asList(7, 8, 9));
+
+        List<List<Integer>> result = null;
+
+        result = cartesian(lst);
+
+
+        ArrayList<Integer> counterList = new ArrayList<>();
+        for (List<Integer> r : result) {
+            ArrayList<Integer> tmpAdder = new ArrayList<>();
+            for (Integer i : r) {
+                tmpAdder.add(i);
+                //System.out.print(i);
+            }
+
+
+            Collections.sort(tmpAdder);
+            int first = tmpAdder.get(0);
+            int last = tmpAdder.get(tmpAdder.size() - 1);
+            int indexDistance = first - last;
+
+            counterList.add(Math.abs(indexDistance));
+            //System.out.print(" -> " + Math.abs(indexDistance));
+            //System.out.println();
+        }
+        Collections.sort(counterList);
+
+
+        return counterList.get(0);
+
+    }
+
+
+    public List<List<Integer>> cartesian(List<List<Integer>> list) {
+        List<List<Integer>> result = new ArrayList<List<Integer>>();
+        int numSets = list.size();
+        Integer[] tmpResult = new Integer[numSets];
+
+        cartesian(list, 0, tmpResult, result);
+
+        return result;
+    }
+
+    public void cartesian(List<List<Integer>> list, int n,
+                          Integer[] tmpResult, List<List<Integer>> result) {
+        if (n == list.size()) {
+            result.add(new ArrayList<Integer>(Arrays.asList(tmpResult)));
+            return;
+        }
+
+        for (Integer i : list.get(n)) {
+            tmpResult[n] = i;
+            cartesian(list, n + 1, tmpResult, result);
+        }
+    }
+
+
+    private ArrayList<Integer> getPositionOfTerms(int docId, String query) throws IOException {
+        System.out.println("searching Position for term: <<" + query + ">>");
         ArrayList<Integer> positonList = new ArrayList<>();
         Terms vector = null;
         vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
@@ -156,7 +236,9 @@ public class Searcher {
         PostingsEnum positions = null;
         BytesRef term;
 
+
         while ((term = terms.next()) != null) {
+
             String termstr = term.utf8ToString(); // Get the text string of the term.
             String result = termstr.replaceAll("[-+.^:,]", "");
             if (result.equals(query)) {
@@ -165,15 +247,18 @@ public class Searcher {
                 positions = terms.postings(positions, PostingsEnum.POSITIONS);
                 positions.nextDoc(); // you still need to move the cursor
                 // now accessing the occurrence position of the terms by iteratively calling nextPosition()
-                // System.out.print(termstr + " - ");
+
                 for (int i = 0; i < freq; i++) {
                     positonList.add(positions.nextPosition());
-                    //  System.out.print(positions.nextPosition() + " ");
+                    //System.out.print(positions.nextPosition());
                 }
                 //System.out.println("");
             }
         }
         //System.out.println("docID " + docId + ": "+ positonList);
+
         return positonList;
     }
+
+
 }

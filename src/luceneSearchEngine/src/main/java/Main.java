@@ -13,9 +13,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.sql.Array;
+import java.util.*;
+
 
 public class Main {
 
@@ -27,7 +27,8 @@ public class Main {
     ConfManager cMan;
 
     public Main() throws IOException, ParseException {
-        System.out.println("check " + dataDir);
+        Console.print("checking folder: " + dataDir, 0);
+        //Runnable r = () -> System.out.print("Run method in other Thread");
         cMan = new ConfManager(configFile);
 
         //searcher.writeIndexTerms();
@@ -36,7 +37,7 @@ public class Main {
     }
 
 
-    private void test() throws IOException, ParseException {
+    private void generateSearcherObj() throws IOException, ParseException {
         searcher = new Searcher(indexDir);
 
 
@@ -53,7 +54,9 @@ public class Main {
 
             tester.deleteIndex();
             tester.createIndex();
-            tester.test();
+            tester.generateSearcherObj();
+
+
             //tester.searcher.getPreviewOfSingleQuery(9,"/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentC.txt", "Coronavirus".toLowerCase(), 2);
 
             //tester.searcher.getPositionOfTerms(9, "covid");
@@ -67,34 +70,36 @@ public class Main {
             // Socket to talk to clients
             ZMQ.Socket socket = context.createSocket(SocketType.REP);
             socket.bind("tcp://127.0.0.1:5555");
-            System.out.println("go");
+            Console.print("Socket connection is deployed. Ready to rumble\n+" +
+                    "----------------------------------------------------------------------", 0);
 
             while (!Thread.currentThread().isInterrupted()) {
                 byte[] reply = socket.recv(0);
-                System.out.println(
-                        "Received " + ": [" + new String(reply, ZMQ.CHARSET) + "]"
-                );
+                Console.print(
+                        "Received message from Node.js: " + new String(reply, ZMQ.CHARSET)
+                        , 0);
 
 
                 String operator = new String(reply, 0, 1, Charset.defaultCharset());
                 String query = new String(reply, ZMQ.CHARSET).substring(1).toLowerCase();
 
-                System.out.println("general " + operator);
+
                 switch (operator.charAt(0)) {
                     case '0': //searchquery
+                        Console.print("Searching for query '" + query + "'", 0);
                         JSONArray resultList = tester.search(query);
                         socket.send(("0" + resultList).toString().getBytes(ZMQ.CHARSET), 0);
 
                         break;
                     case '1': //changesettings
-
+                        Console.print("Change settings", 0);
 
                         //String[] changeData = tester.handleConfChange(reply);
                         try {
                             JSONObject obj = new JSONObject(query);
 
                             String path = obj.getString("path");
-                            System.out.println(1 + " " + path);
+                            //System.out.println(1 + " " + path);
                             if (path != null) {
                                 tester.doIt(path);
 
@@ -116,14 +121,15 @@ public class Main {
                     case '2'://get information
                         //String[] readData = tester.handleConfRead(reply);
 
-
+                        Console.print("Reading data from conf file", 0);
                         String confResult = tester.getConf();
                         confResult = 2 + confResult;
-                        System.out.println(confResult);
-                        System.out.println("back");
+                        //System.out.println(confResult);
+                        //System.out.println("back");
                         socket.send(confResult.toString().getBytes(ZMQ.CHARSET), 0);
                         break;
                     default:
+                        Console.print("Message can not be assigned to an operation", 1);
                         return;
                 }
 
@@ -133,7 +139,8 @@ public class Main {
 
             }
         } catch (Exception e) {
-            System.err.println(e);
+            Console.print("Socketerror:\n" + e, 2);
+
             //throw new RuntimeException(e);
         }
 
@@ -149,7 +156,8 @@ public class Main {
             cMan.writeConf("searching", "dataPath", query);
             return;
         }
-        System.err.println("no folder found");
+        Console.print("Can not write to conf file", 2);
+
     }
 
     private String[] handleConfRead(byte[] input) {
@@ -188,13 +196,12 @@ public class Main {
         //numIndexed = indexer.createIndex(cMan.readConf("searching", "dataPath"), new TextFileFilter());
         String dirPath = cMan.readConf("searching", "dataPath");
         numIndexed = indexer.createIndex(dirPath, new TextFileFilter());
-        System.out.println("test");
-        System.out.println(cMan.readConf("searching", "dataPath"));
+        //System.out.println(cMan.readConf("searching", "dataPath"));
         long endTime = System.currentTimeMillis();
         indexer.close();
-        String result = numIndexed + " File indexed, time taken: "
+        String result = numIndexed + " file(s) indexed, time taken: "
                 + (endTime - startTime) + " ms";
-        System.out.println(result);
+        Console.print(result, 0);
         return result;
     }
 
@@ -224,11 +231,23 @@ public class Main {
         ArrayList<Integer> docList = new ArrayList<Integer>();
 
 
+        if (countWords(searchQuery) > 1) {
+            //The \\W+ will match all non-alphabetic characters occurring one or more times. So there is no need to replace. You can check other patterns also.
+            String[] searchQueryArraySplit = searchQuery.split("\\W+");
+            String[] searchQueryArray = removeStopWord(searchQueryArraySplit);
+            //System.out.println("---" + searchQueryArray);
+            Console.print("Detect multiple query: " + Arrays.toString(searchQueryArray), 0);
+        }
+
 
         for (ScoreDoc hit : _hits) {
             String stats = searcher.getExplanation(searchQuery, hit.doc);
             Document doc = searcher.getDocument(hit);
             int docId = hit.doc;
+
+
+            //searcher.calcIndexDistance(docId, searchQuery);
+
 
             docList.add(docId);
             String preview = "";
@@ -246,7 +265,7 @@ public class Main {
 
 
 
-        embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
+       /* embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
 
 
         for (SimilarObject simW : embeddingTerms) {
@@ -287,7 +306,7 @@ public class Main {
             }
         }
 
-
+        //todo: own threads for similarwords function
         embeddingTerms = searcher.pubmed.getSimWords(searchQuery, 25);
         for (SimilarObject simW : embeddingTerms) {
 
@@ -326,14 +345,15 @@ public class Main {
             }
         }
 
-
+*/
         messageObject.put(0, directMatches);
         messageObject.put(1, googleCorpusMatches);
         messageObject.put(2, pubMedCorpusMatches);
 
         long endTime = System.currentTimeMillis();
 
-        System.out.println((endTime - startTime) + " ms was needed for finding files");
+        long timeNeeded = endTime - startTime;
+        String consoleMesage = timeNeeded + " ms was needed for finding files";
 
         return messageObject;
     }
@@ -342,6 +362,25 @@ public class Main {
 
     }
 
+
+    public String[] removeStopWord(String[] words) {
+        String[] stopWords = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
+        HashSet<String> wordWithStopWord = new HashSet<String>(
+                Arrays.asList(words));
+        HashSet<String> StopWordsSet = new HashSet<>(Arrays.asList(stopWords));
+        wordWithStopWord.removeAll(StopWordsSet);
+        return wordWithStopWord.toArray(new String[wordWithStopWord.size()]);
+    }
+
+
+    private List<String> getTokens(String str) {
+        List<String> tokens = new ArrayList<>();
+        StringTokenizer tokenizer = new StringTokenizer(str, ",");
+        while (tokenizer.hasMoreElements()) {
+            tokens.add(tokenizer.nextToken());
+        }
+        return tokens;
+    }
 
     private JSONObject addToMessage(SimilarObject simW, String stats, Document doc, String preview) {
         JSONObject messageSubItem = new JSONObject();
@@ -354,6 +393,22 @@ public class Main {
         messageSubItem.put("Date", doc.get(LuceneConstants.CREATION_DATE));
 
         return messageSubItem;
+    }
+
+    private int countWords(String str) {
+        if (str == null || str.isEmpty())
+            return 0;
+
+        int count = 0;
+        for (int e = 0; e < str.length(); e++) {
+            if (str.charAt(e) != ' ') {
+                count++;
+                while (str.charAt(e) != ' ' && e < str.length() - 1) {
+                    e++;
+                }
+            }
+        }
+        return count;
     }
 
 

@@ -311,5 +311,8 @@
     <orderEntry type="library" name="Maven: io.aeron:aeron-all:1.39.0" level="project" />
     <orderEntry type="library" name="Maven: org.deeplearning4j:deeplearning4j-zoo:1.0.0-M2.1" level="project" />
     <orderEntry type="library" name="Maven: org.ini4j:ini4j:0.5.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.pdfbox:pdfbox:2.0.24" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.pdfbox:fontbox:2.0.24" level="project" />
+    <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
   </component>
 </module>
