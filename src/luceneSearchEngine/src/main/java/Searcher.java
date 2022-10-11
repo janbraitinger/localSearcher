@@ -149,10 +149,13 @@ public class Searcher {
         Highlighter highlighter = new Highlighter(formatter, queryScorer);
         Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 1);
         highlighter.setTextFragmenter(fragmenter);
+
         TokenStream stream = TokenSources.getTokenStream(reader, docId, LuceneConstants.HIGHLIGHT_INDEX, analyzer);
         String text = getDocumentById(docId).get(LuceneConstants.HIGHLIGHT_INDEX);
+        String highlight = Arrays.toString(highlighter.getBestFragments(stream, text, 25));
 
-        return highlighter.getBestFragments(stream, text, 25)[0];
+
+        return highlight;
 
     }
 

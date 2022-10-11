@@ -58,7 +58,6 @@ public class Main {
 
 
             //tester.searcher.getPreviewOfSingleQuery(9,"/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentC.txt", "Coronavirus".toLowerCase(), 2);
-
             //tester.searcher.getPositionOfTerms(9, "covid");
 
 

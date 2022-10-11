@@ -16,12 +16,18 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.logging.Level;
 
 public class Indexer {
 
     private IndexWriter writer;
 
     public Indexer(String indexDirectoryPath) throws IOException {
+
+        java.util.logging.Logger
+                .getLogger("org.apache.pdfbox").setLevel(Level.SEVERE);
+
         Directory indexDirectory =
                 FSDirectory.open(Paths.get(indexDirectoryPath));
 
@@ -51,10 +57,15 @@ public class Indexer {
     private Document getDocument(File file) throws IOException {
         Document document = new Document();
         String content = null;
+        byte[] byteStream = null;
         if(checkFileName(file).equals("pdf")) {
             content = getText(file);
+            byteStream = getPDFByteString(file);
+
+
         } if(checkFileName(file).equals("txt")){
             content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            byteStream = Files.readAllBytes(Path.of(file.getPath()));
         }
 
 
@@ -84,8 +95,11 @@ public class Indexer {
         //document.add(new Field(LuceneConstants.TERM_DETAILS, content, FieldType.LegacyNumericType.DOUBLE), ft));
 
 
-        document.add(new Field(LuceneConstants.TERM_DETAILS, new String(Files.readAllBytes(Path.of(file.getPath())), "UTF-8"), ft));
-        document.add(new TextField(LuceneConstants.HIGHLIGHT_INDEX, new String(Files.readAllBytes(Path.of(file.getPath()))), Field.Store.YES));
+        document.add(new Field(LuceneConstants.TERM_DETAILS, content, ft));
+        document.add(new TextField(LuceneConstants.HIGHLIGHT_INDEX, content, Field.Store.YES));
+        //System.out.println(content);
+
+
 
         document.add(authorField);
         document.add(contentField);
@@ -105,6 +119,15 @@ public class Indexer {
             return extension;
         }
         return "";
+    }
+
+    private byte[] getPDFByteString(File pdfFile) throws IOException {
+        PDDocument document = PDDocument.load(pdfFile);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        document.save(byteArrayOutputStream);
+        document.close();
+        InputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        return inputStream.readAllBytes();
     }
 
     private String getText(File pdfFile) throws IOException {
