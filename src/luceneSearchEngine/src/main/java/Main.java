@@ -64,8 +64,8 @@ public class Main {
             socket.bind("tcp://127.0.0.1:5556");
             Console.print("Socket connection is deployed. Ready to rumble\n" +
                     "----------------------------------------------------------------------", 0);
-            JSONObject messageObj = new JSONObject();
 
+            String messageString = null;
 
 
             while (!Thread.currentThread().isInterrupted()) {
@@ -76,37 +76,33 @@ public class Main {
 
                 JSONObject inputMessageObj = new JSONObject(new String(reply, ZMQ.CHARSET));
                 String header = (String) inputMessageObj.get("header");
-                messageObj.clear();
+
 
 
                 switch (header) {
-                    case SocketMessages.SEND_DOCUMENT_LIST: //searchquery
+                    case SocketMessages.SEND_DOCUMENT_LIST:
                         String query = (String) inputMessageObj.get("body");
                         Console.print("Searching for query '" + query + "'", 0);
                         JSONArray resultList = search(query);
-                        messageObj.put("header", SocketMessages.SEND_DOCUMENT_LIST);
-                        messageObj.put("body", resultList.toString());
-
-
-                        socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
+                        messageString = buildMessageString(SocketMessages.SEND_DOCUMENT_LIST, resultList.toString());
+                        socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                         break;
 
 
-                    case SocketMessages.CHANGE_CONF: //changesettings
+                    case SocketMessages.CHANGE_CONF:
                         Console.print("Change settings", 0);
                         String newPath = (String) inputMessageObj.get("body");
                         try {
                             JSONObject obj = new JSONObject(newPath);
                             String path = obj.getString("path");
+
                             if (path != null) {
                                 changeDataDir(path);
                                 deleteIndex();
                                 String result = createIndex();
-                                //tester.searcher.setNewIndex("/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index");
-                                messageObj.put("header", SocketMessages.CHANGE_CONF);
-                                messageObj.put("body", result);
 
-                                socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
+                                messageString = buildMessageString(SocketMessages.CHANGE_CONF, result);
+                                socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                                 break;
                             }
                         } catch (Exception e) {
@@ -115,29 +111,30 @@ public class Main {
                         }
                         break;
 
-                    case SocketMessages.READ_CONF://get information
+                    case SocketMessages.READ_CONF:
                         Console.print("Reading data from conf file", 0);
                         String confResult = getConf();
-                        //messageObj.put(SocketMessages.READ_CONF, confResult);
 
-
-                        messageObj.put("header", SocketMessages.READ_CONF);
-                        messageObj.put("body", confResult);
-
-                        socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
+                        messageString = buildMessageString(SocketMessages.READ_CONF, confResult);
+                        socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                         break;
+
                     default:
                         Console.print("Message can not be assigned to an operation", 1);
+                        socket.send("error".toString().getBytes(ZMQ.CHARSET), 0);
                         return;
                 }
-
-                // Collection<String> similarWords = google.getSimWords(searchQuery, 2500);
-
             }
         } catch (Exception e) {
             Console.print("Socketerror:\n" + e, 2);
-            //throw new RuntimeException(e);
         }
+    }
+
+    private String buildMessageString(String header, String body){
+        JSONObject messageObj = new JSONObject();
+        messageObj.put("header", header);
+        messageObj.put("body", body);
+        return messageObj.toString();
     }
 
 

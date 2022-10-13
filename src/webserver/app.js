@@ -148,6 +148,7 @@ async function middlewear(para, socket = null) {
                 break
 
             default:
+                socket.emit("error", null);
                 break
         }
     });

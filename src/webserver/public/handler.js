@@ -12,6 +12,7 @@ const dataTable = $('#aexample').DataTable({
   searching: true,
   paging: false,
   info: false,
+  "destroy": true,
   responsive: true,
   order: [
       [4, 'desc']
@@ -120,7 +121,6 @@ socket.on(RpcGetCall.RESULTLIST, (data) => {
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
-  dataTable.clear()
   canvasId = 0
   showResultList(docs)
 
@@ -132,6 +132,12 @@ socket.on(RpcGetCall.RESULTLIST, (data) => {
 socket.on(RpcGetCall.CONF, (confData) => {
   let newPath = JSON.parse(confData).path
   getSection.dirPath.val(newPath);
+})
+
+
+socket.on("error", () =>{
+  alert("error")
+  
 })
 
 
@@ -154,9 +160,18 @@ setInterval(makeAlert, 500);
 
 getSection.searchButton.click(function() {
   var searchQuery = getSection.searchInputField.val();
-  getSection.loader.show()
+
   removeElements()
+  dataTable.clear().draw()
+  
+
+
+  if(searchQuery.length>0){
+
+  getSection.loader.show()
+
   socket.emit(RpcSendCall.SEARCH, searchQuery)
+}
 });
 
 
@@ -267,17 +282,19 @@ $('#aexample tbody').on('click', 'tr', function() {
   $(".path span").html(dataTable.row(this).data()[5]);
   $(".term span").html(dataTable.row(this).data()[2]);
   $(".preview span").html(dataTable.row(this).data()[6]);
+
+  $('.btn-primary').off('click');
+
   $('.btn-primary').click(function() { //downloadButton on modal
-      ajaxDownload(path)
-  });
+    ajaxDownload(path)
+});
 
   $("#amyModal").modal("show");
 });
 
 
+
 function showResultList(jsonPara) {
-
-
 
 
   getSection.searchResults.html("")
@@ -390,6 +407,7 @@ function logToConsole(message) {
 
 
 
+
 function ajaxDownload(file) {
 
   $.ajax({
@@ -404,8 +422,8 @@ function ajaxDownload(file) {
       },
       success: function(response, status, xhr) {
 
-          var fileName = xhr.getResponseHeader('Content-Disposition').split('"')[1].split('"')[0]
-          console.log(fileName)
+          //var fileName = xhr.getResponseHeader('Content-Disposition').split('"')[1].split('"')[0]
+       
 
           var a = document.createElement('a');
           var url = window.URL.createObjectURL(response);
@@ -424,7 +442,7 @@ function ajaxDownload(file) {
       }
 
   });
-  console.log("done")
+
 }
 
 function removeElements() {
@@ -445,7 +463,7 @@ function getFirstIndex() {
       type: "GET",
       success: function(response, status, xhr) {
           getSection.dirPath.val(response);
-          //console.log(response)
+          console.log("---" + response)
       },
       error: function(xhr, ajaxOptions, thrownError) {
           //alert(xhr.status);
