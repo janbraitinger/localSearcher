@@ -106,6 +106,16 @@ $("#list").on("click", function(e) {
 });
 
 
+/*
+socket.on(RpcGetCall.RESULTLIST, (data) => {
+  let jsonData = JSON.parse(data)
+  var stringData = ""
+  for (let i of jsonData) {
+      stringData += "- " + i + "<br/>"
+  }
+  getSection.dirContentList.html(stringData)
+})
+*/
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
@@ -140,15 +150,6 @@ function makeAlert() {
 
 setInterval(makeAlert, 500);
 
-
-socket.on(RpcGetCall.RESULTLIST, (data) => {
-  let jsonData = JSON.parse(data)
-  var stringData = ""
-  for (let i of jsonData) {
-      stringData += "- " + i + "<br/>"
-  }
-  getSection.dirContentList.html(stringData)
-})
 
 
 getSection.searchButton.click(function() {

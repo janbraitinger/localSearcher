@@ -1,3 +1,7 @@
+var messageConstants = require('./constants');
+
+
+
 const express = require('express')
 const path = require('path')
 const app = express()
@@ -30,31 +34,15 @@ var indexCorpus = []
 const connections = [];
 var MAXSUGGESTS = 25
 
-/* read embeddings content for suggestions */
-/*var pubMedArray = fs.readFileSync('pubmedWords.txt').toString().split(",");
-var googleArray = fs.readFileSync('googleWords.txt').toString().split(",");
 
-
-for (i in pubMedArray) {
-   pubMedWords.push(pubMedArray[i]);
-}
-for (i in googleArray) {
-   googleWords.push(googleArray[i]);
-}*/
-//var indexFile  = fs.readFileSync('indexData.txt').toString().split(",");
 var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
 
-//var holeArray = pubMedArray.concat(googleArray);
-//var holeArray = indexCorpus
 
-
-/* ----------- */
-
-var tmpStartPath = ""
+var startPath = ""
 
 function confJsonData() {
     var obj = new Object();
-    obj.path = tmpStartPath
+    obj.path = startPath
     var jsonString = JSON.stringify(obj);
     return jsonString
 }
@@ -67,26 +55,26 @@ io.sockets.on('connection', (socket) => {
     socket.emit("conf", confJsonData())
 
     socket.on('newIndex', (path) => {
-         console.log("+++" + path)
+        console.log("+++" + path)
         if (fs.existsSync(path)) {
             let tmpPathObj = new Object()
             tmpPathObj.path = path
 
-
-            middlewear("1" + JSON.stringify(tmpPathObj), socket)
-            tmpStartPath = path
-            //confJsonData().path = path
+            let setNewConf = generateJSONMessage(messageConstants.CHANGE_CONF, JSON.stringify(tmpPathObj))
+            middlewear(setNewConf, socket)
+            startPath = path
+        
             var array = []
             try {
-                fs.readdirSync(tmpStartPath).forEach(file => {
+                fs.readdirSync(startPath).forEach(file => {
                     array.push(file)
                 });
             } catch (error) {
                 socket.emit("stdout", "folder error")
                 return
             }
-    
-            //console.log(JSON.stringify(array.Path));
+
+      
             socket.emit("stdout", JSON.stringify(array))
             return
         }
@@ -102,25 +90,10 @@ io.sockets.on('connection', (socket) => {
         socket.emit("autocomplete", word)
     });
 
-/* socket.on('checkIndex', () => {
-        var array = []
-        try {
-            fs.readdirSync(tmpStartPath).forEach(file => {
-                array.push(file)
-            });
-        } catch (error) {
-            socket.emit("stdout", "folder error")
-            return
-        }
 
-        //console.log(JSON.stringify(array.Path));
-        socket.emit("docResultList", JSON.stringify(array))
-    })*/
-
-
-    /* receive final search query */
     socket.on('finalSearch', (data) => {
-        middlewear("0" + data, socket)
+        let sendSearchQuery = generateJSONMessage(messageConstants.GET_DOCUMENT_LIST, data)
+        middlewear(sendSearchQuery, socket)
     })
 
 
@@ -133,48 +106,51 @@ io.sockets.on('connection', (socket) => {
 
 
 
+function generateJSONMessage(header, body, subBody=""){
+    var senderObj = new Object()
+    senderObj.header = header
+    senderObj.body  = body;
+    senderObj.body.subBody = subBody
+    return JSON.stringify(senderObj)
+}
 
 /* get final search query, send it to java backend and wait for anwser */
-async function middlewear(para, socket=null) {
-   console.log()
+async function middlewear(para, socket = null) {
+ 
     const sock = zmq.socket("req");
-    sock.connect("tcp://127.0.0.1:5555")
+    sock.connect("tcp://127.0.0.1:5556")
     var words = para.split(/\W+/).filter(function(token) {
         return token.toLowerCase();
-
     });
+
+ 
+
     console.log("send: " + para)
     await sock.send(para)
 
-
     sock.on('message', function(data) {
-        var substring = data.toString('utf8').substring(1)
-        logToConsole('got messsage: ' + data.toString('utf8'));
-        //logToConsole(substring)
-        //logToConsole(data.toString('utf8')[0])
-        var operator = data.toString('utf8')[0]
-        switch (parseInt(operator)) {
-            case 0:
-                socket.emit("docResultList", substring)
-                // console.log(0)
-                break
-            case 1:
-                socket.emit("stdout", substring) // time 
-                console.log("stdout" + substring)
+        var messageObj = JSON.parse(data)
+        var messageBody = messageObj["body"]
+ 
+
+        switch (messageObj["header"]) {
+            
+            case messageConstants.GET_DOCUMENT_LIST:
+                socket.emit("docResultList", messageBody)
                 break
 
-                case 2:
-                  console.log("path")
-                  tmpStartPath = substring
-                  break
+            case messageConstants.CHANGE_CONF:
+                socket.emit("stdout", messageBody)
+                break
+
+            case messageConstants.READ_CONF:
+                startPath = messageBody
+                break
+
             default:
-                //console.log("other")
                 break
         }
-
     });
-
-
 }
 
 
@@ -241,16 +217,20 @@ app.post("/getFile", urlencodedParser, (req, res) => {
 });
 
 
-_flag = false
-if(!_flag){
-   middlewear("2", null)
-   _flag = true
+function getFirstDirPath(){
+    _flag = false
+    if (!_flag) {
+        let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
+        middlewear(getConf, null)
+        _flag = true
+    }
 }
 
 
-app.get("/getIndex", urlencodedParser, (req, res) => {
-   console.log("test")
-   console.log(tmpStartPath)
-   res.send(tmpStartPath)
 
+app.get("/getIndex", urlencodedParser, (req, res) => {
+    res.send(startPath)
 });
+
+
+getFirstDirPath()

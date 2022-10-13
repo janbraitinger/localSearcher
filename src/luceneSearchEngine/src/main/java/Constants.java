@@ -1,4 +1,4 @@
-public class LuceneConstants {
+class LuceneConstants {
     public static final String CONTENTS = "contents";
     public static final String FILE_NAME = "filename";
 
@@ -8,3 +8,9 @@ public class LuceneConstants {
     public static final String CREATION_DATE = "creation_date";
     public static final String HIGHLIGHT_INDEX = "highlight";
     public static final int MAX_SEARCH = 10;}
+
+class SocketMessages{
+    public static final String SEND_DOCUMENT_LIST = "documentList";
+    public static final String READ_CONF = "getConf";
+    public static final String CHANGE_CONF = "changeConf";
+}

@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Array;
 import java.util.*;
 
 
@@ -26,16 +25,6 @@ public class Main {
     static String configFile = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/conf.ini";
     ConfManager cMan;
 
-    public Main() throws IOException, ParseException {
-        Console.print("checking folder: " + dataDir, 0);
-        //Runnable r = () -> System.out.print("Run method in other Thread");
-        cMan = new ConfManager(configFile);
-
-        //searcher.writeIndexTerms();
-
-
-    }
-
 
     private void generateSearcherObj() throws IOException, ParseException {
         searcher = new Searcher(indexDir);
@@ -43,34 +32,41 @@ public class Main {
 
     }
 
-    public static void main(String[] args) throws IOException {
+    private void createConfManagerObj() throws IOException {
+        cMan = new ConfManager(configFile);
+    }
 
+    public Main() {
 
-        Main tester = null;
+        Console.print("start indexing", 0);
 
         try {
-
-            tester = new Main();
-
-            tester.deleteIndex();
-            tester.createIndex();
-            tester.generateSearcherObj();
-
-
-            //tester.searcher.getPreviewOfSingleQuery(9,"/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentC.txt", "Coronavirus".toLowerCase(), 2);
-            //tester.searcher.getPositionOfTerms(9, "covid");
-
-
+            this.createConfManagerObj();
+            this.deleteIndex();
+            this.createIndex();
+            this.generateSearcherObj();
+            this.startSocketThread();
         } catch (Exception e) {
-            e.printStackTrace();
+            Console.print(e.toString(), 2);
         }
+    }
 
+
+    public static void main(String[] args) {
+        new Main();
+    }
+
+
+    private void startSocketThread() {
         try (ZContext context = new ZContext()) {
             // Socket to talk to clients
             ZMQ.Socket socket = context.createSocket(SocketType.REP);
-            socket.bind("tcp://127.0.0.1:5555");
-            Console.print("Socket connection is deployed. Ready to rumble\n+" +
+            socket.bind("tcp://127.0.0.1:5556");
+            Console.print("Socket connection is deployed. Ready to rumble\n" +
                     "----------------------------------------------------------------------", 0);
+            JSONObject messageObj = new JSONObject();
+
+
 
             while (!Thread.currentThread().isInterrupted()) {
                 byte[] reply = socket.recv(0);
@@ -78,78 +74,78 @@ public class Main {
                         "Received message from Node.js: " + new String(reply, ZMQ.CHARSET)
                         , 0);
 
+                JSONObject inputMessageObj = new JSONObject(new String(reply, ZMQ.CHARSET));
+                String header = (String) inputMessageObj.get("header");
+                messageObj.clear();
 
-                String operator = new String(reply, 0, 1, Charset.defaultCharset());
-                String query = new String(reply, ZMQ.CHARSET).substring(1).toLowerCase();
 
-
-                switch (operator.charAt(0)) {
-                    case '0': //searchquery
+                switch (header) {
+                    case SocketMessages.SEND_DOCUMENT_LIST: //searchquery
+                        String query = (String) inputMessageObj.get("body");
                         Console.print("Searching for query '" + query + "'", 0);
-                        JSONArray resultList = tester.search(query);
-                        socket.send(("0" + resultList).toString().getBytes(ZMQ.CHARSET), 0);
+                        JSONArray resultList = search(query);
+                        messageObj.put("header", SocketMessages.SEND_DOCUMENT_LIST);
+                        messageObj.put("body", resultList.toString());
 
+
+                        socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
                         break;
-                    case '1': //changesettings
+
+
+                    case SocketMessages.CHANGE_CONF: //changesettings
                         Console.print("Change settings", 0);
-
-                        //String[] changeData = tester.handleConfChange(reply);
+                        String newPath = (String) inputMessageObj.get("body");
                         try {
-                            JSONObject obj = new JSONObject(query);
-
+                            JSONObject obj = new JSONObject(newPath);
                             String path = obj.getString("path");
-                            //System.out.println(1 + " " + path);
                             if (path != null) {
-                                tester.doIt(path);
+                                changeDataDir(path);
+                                deleteIndex();
+                                String result = createIndex();
+                                //tester.searcher.setNewIndex("/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index");
+                                messageObj.put("header", SocketMessages.CHANGE_CONF);
+                                messageObj.put("body", result);
 
-                                tester.deleteIndex();
-                                String result = tester.createIndex();
-                                tester.searcher.setNewIndex("/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index");
-
-                                result = 1 + result;
-                                socket.send(result.toString().getBytes(ZMQ.CHARSET), 0);
+                                socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
                                 break;
                             }
                         } catch (Exception e) {
                             System.err.println(e);
                             socket.send(e.toString().getBytes(ZMQ.CHARSET), 0);
                         }
-
-
                         break;
-                    case '2'://get information
-                        //String[] readData = tester.handleConfRead(reply);
 
+                    case SocketMessages.READ_CONF://get information
                         Console.print("Reading data from conf file", 0);
-                        String confResult = tester.getConf();
-                        confResult = 2 + confResult;
-                        //System.out.println(confResult);
-                        //System.out.println("back");
-                        socket.send(confResult.toString().getBytes(ZMQ.CHARSET), 0);
+                        String confResult = getConf();
+                        //messageObj.put(SocketMessages.READ_CONF, confResult);
+
+
+                        messageObj.put("header", SocketMessages.READ_CONF);
+                        messageObj.put("body", confResult);
+
+                        socket.send(messageObj.toString().getBytes(ZMQ.CHARSET), 0);
                         break;
                     default:
                         Console.print("Message can not be assigned to an operation", 1);
                         return;
                 }
 
-
                 // Collection<String> similarWords = google.getSimWords(searchQuery, 2500);
-
 
             }
         } catch (Exception e) {
             Console.print("Socketerror:\n" + e, 2);
-
             //throw new RuntimeException(e);
         }
-
     }
+
 
     private String getConf() {
         return cMan.readConf("searching", "dataPath");
     }
 
-    private void doIt(String query) throws IOException, ParseException {
+    private void changeDataDir(String query) throws IOException, ParseException {
 
         if (Files.exists(Path.of(query))) {
             cMan.writeConf("searching", "dataPath", query);
@@ -164,24 +160,6 @@ public class Main {
         return abc;
     }
 
-
-    private String[] handleConfChange(byte[] input) {
-        String[] abc = new String[1];
-        return abc;
-    }
-
-    private int[] detectWhiteSpaces(String s) {
-        int index = -1;
-        for (int i = 0; i < s.length(); i++) {
-            if (Character.isWhitespace(s.charAt(i))) {
-                index = i;
-                break;
-            }
-        }
-
-        System.out.println("Required Index : " + index);
-        return null;
-    }
 
     private void deleteIndex() {
         Arrays.stream(new File(indexDir).listFiles()).forEach(File::delete);
@@ -215,8 +193,6 @@ public class Main {
         TopDocs hits;
         ArrayList<SimilarObject> embeddingTerms;
 
-
-        long startTime = System.currentTimeMillis();
 
         try {
             hits = searcher.search(searchQuery);
@@ -349,18 +325,8 @@ public class Main {
         messageObject.put(1, googleCorpusMatches);
         messageObject.put(2, pubMedCorpusMatches);
 
-        long endTime = System.currentTimeMillis();
-
-        long timeNeeded = endTime - startTime;
-        String consoleMesage = timeNeeded + " ms was needed for finding files";
-
         return messageObject;
     }
-
-    private void iterateSearch(ScoreDoc hit) {
-
-    }
-
 
     public String[] removeStopWord(String[] words) {
         String[] stopWords = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
