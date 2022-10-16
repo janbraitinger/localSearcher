@@ -45,6 +45,9 @@ public class Main {
             this.deleteIndex();
             this.createIndex();
             this.generateSearcherObj();
+            //this.search("capital city spain");
+            //BM25(capita, city, docId) + indexDistances
+
             this.startSocketThread();
         } catch (Exception e) {
             Console.print(e.toString(), 2);
@@ -152,10 +155,6 @@ public class Main {
 
     }
 
-    private String[] handleConfRead(byte[] input) {
-        String[] abc = new String[1];
-        return abc;
-    }
 
 
     private void deleteIndex() {
@@ -202,12 +201,13 @@ public class Main {
         ScoreDoc[] _hits = hits.scoreDocs;
         ArrayList<Integer> docList = new ArrayList<Integer>();
 
+        int lengthOfQuery = countWords(searchQuery);
+        String[] searchQueryArray = new String[lengthOfQuery];
 
-        if (countWords(searchQuery) > 1) {
+        if (lengthOfQuery > 1) {
             //The \\W+ will match all non-alphabetic characters occurring one or more times. So there is no need to replace. You can check other patterns also.
             String[] searchQueryArraySplit = searchQuery.split("\\W+");
-            String[] searchQueryArray = removeStopWord(searchQueryArraySplit);
-            //System.out.println("---" + searchQueryArray);
+            searchQueryArray = removeStopWord(searchQueryArraySplit);
             Console.print("Detect multiple query: " + Arrays.toString(searchQueryArray), 0);
         }
 
@@ -216,9 +216,11 @@ public class Main {
             String stats = searcher.getExplanation(searchQuery, hit.doc);
             Document doc = searcher.getDocument(hit);
             int docId = hit.doc;
+            int queryDistance = searcher.calcIndexDistance(docId, searchQueryArray);
 
 
-            //searcher.calcIndexDistance(docId, searchQuery);
+
+            System.out.println("Length: " + queryDistance);
 
 
             docList.add(docId);
@@ -237,9 +239,9 @@ public class Main {
 
 
 
-       /* embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
+        //embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
 
-
+        /*
         for (SimilarObject simW : embeddingTerms) {
 
             hits = searcher.search(simW.term);
@@ -317,7 +319,7 @@ public class Main {
             }
         }
 
-*/
+    */
         messageObject.put(0, directMatches);
         messageObject.put(1, googleCorpusMatches);
         messageObject.put(2, pubMedCorpusMatches);
@@ -356,6 +358,9 @@ public class Main {
 
         return messageSubItem;
     }
+
+
+
 
     private int countWords(String str) {
         if (str == null || str.isEmpty())

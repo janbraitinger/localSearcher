@@ -7,6 +7,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,9 @@ public class Indexer {
 
         java.util.logging.Logger
                 .getLogger("org.apache.pdfbox").setLevel(Level.SEVERE);
+
+
+
 
         Directory indexDirectory =
                 FSDirectory.open(Paths.get(indexDirectoryPath));

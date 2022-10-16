@@ -24,8 +24,6 @@ public class WordEmbedding {
         }
 
         long endTime = System.currentTimeMillis();
-        System.out.println("similarity calculation time needed: " + (endTime-startTime));
-
 
 
         return list;
