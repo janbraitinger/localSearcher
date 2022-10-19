@@ -2,6 +2,7 @@ import org.apache.arrow.flatbuf.Int;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
@@ -9,6 +10,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.highlight.*;
+import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -31,17 +33,18 @@ public class Searcher {
     IndexSearcher indexSearcher;
     QueryParser queryParser;
     Query query;
-    //WordEmbedding google, pubmed;
+    WordEmbedding google, pubmed;
     int docsLength;
 
     public Searcher(String indexDirectoryPath) throws IOException, ParseException {
         setNewIndex(indexDirectoryPath);
         String embeddingDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/wordEmbeddings/";
-        /*
+
         google = new WordEmbedding();
         google.loadModel(embeddingDir + "googleCorpus.bin");
         pubmed = new WordEmbedding();
-        pubmed.loadModel(embeddingDir + "pubmed.bin");*/
+        pubmed.loadModel(embeddingDir + "pubmed.bin");
+
 
 
     }
@@ -51,8 +54,12 @@ public class Searcher {
         Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
         reader = DirectoryReader.open(indexDirectory);
         indexSearcher = new IndexSearcher(reader);
+        indexSearcher.setSimilarity(new BM25Similarity());
+
         queryParser = new QueryParser(LuceneConstants.CONTENTS, new StandardAnalyzer());
+
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
+
         docsLength = getDocsLength();
     }
 
@@ -66,6 +73,7 @@ public class Searcher {
 
     public TopDocs search(String searchQuery)
             throws IOException, ParseException {
+
         query = queryParser.parse(searchQuery);
         return indexSearcher.search(query, LuceneConstants.MAX_SEARCH);
     }
@@ -111,12 +119,10 @@ public class Searcher {
     */
 
 
-    public String getExplanation(String _query, int docID) throws IOException, ParseException {
-        String after = "";
-        Query query = queryParser.parse(_query);
+    public float getBM25Score(String queryString, int docID) throws IOException, ParseException {
+        Query query = queryParser.parse(queryString);
         Explanation explanation = indexSearcher.explain(query, docID);
-        //System.out.println(explanation.getDescription()); // do what you need with this data
-        return explanation.toString();     // do what you need with this data
+        return explanation.getValue();
     }
 
     private String getDocName(int docId) throws IOException {
@@ -146,7 +152,7 @@ public class Searcher {
     public String getPreviewOfSingleQuery(int docId, String filePath, String query, int ngram) throws IOException, ParseException, InvalidTokenOffsetsException {
 
         Formatter formatter = new SimpleHTMLFormatter();
-        Analyzer analyzer = new StandardAnalyzer();
+        Analyzer analyzer = new StopAnalyzer();
         QueryScorer queryScorer = new QueryScorer(queryParser.parse(query));
         Highlighter highlighter = new Highlighter(formatter, queryScorer);
         Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 1);
@@ -179,9 +185,7 @@ public class Searcher {
 
 
 
-        List<List<Integer>> result = null;
-
-        result = cartesian(lst);
+        List<List<Integer>> result = cartesian(lst);
 
 
         ArrayList<Integer> counterList = new ArrayList<>();

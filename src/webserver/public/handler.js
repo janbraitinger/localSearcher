@@ -215,8 +215,8 @@ function handleListElement(MATCHING, img, obj, i) {
   var getTerm = ""
   var getWeight = ""
   try {
-      getTerm = obj.Stats.split("contents:")[1].split(" in ")[0]
-      getWeight = obj.Stats.split(" ")[0]
+      getWeight = obj.Weight
+      getTerm = obj.Term
   } catch {
       getTerm = "unknown"
       getWeight = "unknown"

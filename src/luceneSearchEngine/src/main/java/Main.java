@@ -1,19 +1,29 @@
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.StopAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Version;
+import org.bytedeco.javacv.FrameFilter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 
 
 public class Main {
@@ -81,7 +91,6 @@ public class Main {
                 String header = (String) inputMessageObj.get("header");
 
 
-
                 switch (header) {
                     case SocketMessages.SEND_DOCUMENT_LIST:
                         String query = (String) inputMessageObj.get("body");
@@ -133,7 +142,7 @@ public class Main {
         }
     }
 
-    private String buildMessageString(String header, String body){
+    private String buildMessageString(String header, String body) {
         JSONObject messageObj = new JSONObject();
         messageObj.put("header", header);
         messageObj.put("body", body);
@@ -154,7 +163,6 @@ public class Main {
         Console.print("Can not write to conf file", 2);
 
     }
-
 
 
     private void deleteIndex() {
@@ -189,99 +197,200 @@ public class Main {
         TopDocs hits;
         ArrayList<SimilarObject> embeddingTerms;
 
-
-        try {
-            hits = searcher.search(searchQuery);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return messageObject.put("error");
-        }
-
-
-        ScoreDoc[] _hits = hits.scoreDocs;
         ArrayList<Integer> docList = new ArrayList<Integer>();
 
         int lengthOfQuery = countWords(searchQuery);
         String[] searchQueryArray = new String[lengthOfQuery];
-
+        boolean multipleQueryFlag = false;
         if (lengthOfQuery > 1) {
             //The \\W+ will match all non-alphabetic characters occurring one or more times. So there is no need to replace. You can check other patterns also.
             String[] searchQueryArraySplit = searchQuery.split("\\W+");
             searchQueryArray = removeStopWord(searchQueryArraySplit);
             Console.print("Detect multiple query: " + Arrays.toString(searchQueryArray), 0);
+            multipleQueryFlag = true;
         }
 
 
+        String newQuery = "";
+        for (String subQuery : searchQueryArray) {
+            newQuery += subQuery + " ";
+        }
+
+        if (!multipleQueryFlag) {
+            newQuery = searchQuery;
+        }
+
+
+
+        hits = searcher.search(newQuery);
+        ScoreDoc[] _hits = hits.scoreDocs;
+
+
         for (ScoreDoc hit : _hits) {
-            String stats = searcher.getExplanation(searchQuery, hit.doc);
+            float bm25Score = searcher.getBM25Score(newQuery, hit.doc);
+
             Document doc = searcher.getDocument(hit);
             int docId = hit.doc;
-            int queryDistance = searcher.calcIndexDistance(docId, searchQueryArray);
+            int queryDistance = 1;
+            if (multipleQueryFlag) {
+                queryDistance = searcher.calcIndexDistance(docId, searchQueryArray);
+            }
 
-
-
-            System.out.println("Length: " + queryDistance);
-
+            float documentWeight = bm25Score / queryDistance;
 
             docList.add(docId);
             String preview = "";
 
             try {
-                preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), searchQuery, 8);
+                preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), newQuery, 8);
             } catch (Exception e) {
                 preview = e.toString();
             }
             SimilarObject matchinQuery = new SimilarObject();
-            matchinQuery.term = searchQuery;
+            matchinQuery.term = newQuery;
             matchinQuery.similarity = 1;
-            directMatches.put(addToMessage(matchinQuery, stats, doc, preview));
+            directMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
         }
 
 
+        if (multipleQueryFlag) {
 
-        //embeddingTerms = searcher.google.getSimWords(searchQuery, 25);
+            ArrayList embeddingWordList = new ArrayList();
 
-        /*
-        for (SimilarObject simW : embeddingTerms) {
+            for (String query : searchQueryArray) {
 
-            hits = searcher.search(simW.term);
-            _hits = hits.scoreDocs;
-
-            for (ScoreDoc hit : _hits) {
-
-                int docId = hit.doc;
-                if (!docList.contains(docId)) {
-
-                    try {
-                        docList.add(docId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                    String stats = searcher.getExplanation(searchQuery, hit.doc);
-                    Document doc = searcher.getDocument(hit);
-
-                    String preview = "";
-
-                    try {
-                        preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW.term, 8);
-                    } catch (Exception e) {
-
-                        preview = e.toString();
-                    }
+                Collection _embeddingTerms = searcher.pubmed.getSimilarWords(query, 25);
+                embeddingWordList.add(_embeddingTerms);
+            }
 
 
-                    stats = searcher.getExplanation(simW.term, hit.doc);
-                    googleCorpusMatches.put(addToMessage(simW, stats, doc, preview));
+            List<List<String>> _result = cartesian(embeddingWordList);
 
+
+
+
+
+            for(List<String> list : _result) {
+                String newEmbeddingMultipleQuery = "";
+                ArrayList<String> originlaEewEmbeddingMultipleQuery = new ArrayList();
+                for(String letter : list) {
+                    newEmbeddingMultipleQuery += letter + " ";
+                    originlaEewEmbeddingMultipleQuery.add(letter);
                 }
 
+                try{
 
+
+
+                    TopDocs neueHits = searcher.search(newEmbeddingMultipleQuery);
+                    ScoreDoc[] getroffen = neueHits.scoreDocs;
+
+
+
+
+                    System.out.println(newEmbeddingMultipleQuery);
+                    System.out.println(getroffen.length);
+
+                    for (ScoreDoc hit : getroffen) {
+
+                        if(!docList.contains(hit.doc)) {
+
+                            System.out.println(searcher.getDocumentById(hit.doc).getField(LuceneConstants.FILE_NAME));
+                            docList.add(hit.doc);
+                            Document doc = searcher.getDocument(hit);
+                            String preview = "";
+
+                            try {
+                                preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), newQuery, 25);
+                            } catch (Exception e) {
+                                preview = e.toString();
+                            }
+                            float bm25Score = searcher.getBM25Score(newEmbeddingMultipleQuery, hit.doc);
+                            float queryDistance = searcher.calcIndexDistance(hit.doc, searchQueryArray);
+
+
+                            float documentWeight = bm25Score / queryDistance;
+
+                            SimilarObject matchinQuery = new SimilarObject();
+                            matchinQuery.term = Arrays.toString(originlaEewEmbeddingMultipleQuery.toArray());
+                            matchinQuery.similarity = .5;
+
+
+                            googleCorpusMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
+                        }
+                    }
+
+                }catch (Exception e){
+                    Console.print(e.toString(), 2);
+                }
+
+            }
+
+
+
+        }
+        else {
+
+
+            //if just one matches - get other word
+
+
+            // capital of france
+            // yes ........ no -> Detect which words occur in the document
+            // searching an alternative term for france
+
+
+            //first step: check if only one word was known
+            //second step: alternatives of the other words
+
+
+            embeddingTerms = searcher.google.getSimilarObjects(searchQuery, 25);
+
+
+            for (SimilarObject simW : embeddingTerms) {
+
+                hits = searcher.search(simW.term);
+                _hits = hits.scoreDocs;
+
+                for (ScoreDoc hit : _hits) {
+
+                    int docId = hit.doc;
+                    if (!docList.contains(docId)) {
+
+                        try {
+                            docList.add(docId);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            break;
+                        }
+                        //float bm25Score = searcher.getBM25Score(newQuery, hit.doc);
+                        Document doc = searcher.getDocument(hit);
+
+                        String preview = "";
+
+                        try {
+                            preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW.term, 8);
+                        } catch (Exception e) {
+
+                            preview = e.toString();
+                        }
+
+
+                        float bm25Score = searcher.getBM25Score(simW.term, hit.doc);
+                        googleCorpusMatches.put(addToMessage(simW, bm25Score, doc, preview));
+
+                    }
+
+
+                }
             }
         }
 
+/*
+
+
         //todo: own threads for similarwords function
-        embeddingTerms = searcher.pubmed.getSimWords(searchQuery, 25);
+        embeddingTerms = searcher.pubmed.getSimilarObjects(searchQuery, 25);
         for (SimilarObject simW : embeddingTerms) {
 
             hits = searcher.search(simW.term);
@@ -298,7 +407,7 @@ public class Main {
                         e.printStackTrace();
                         break;
                     }
-                    String stats = searcher.getExplanation(searchQuery, hit.doc);
+                    String stats = searcher.getBM25Score(searchQuery, hit.doc);
                     Document doc = searcher.getDocument(hit);
 
 
@@ -323,9 +432,43 @@ public class Main {
         messageObject.put(0, directMatches);
         messageObject.put(1, googleCorpusMatches);
         messageObject.put(2, pubMedCorpusMatches);
-
+        Console.print("Found " + String.valueOf(docList.size()) + " documents as result", 0);
         return messageObject;
     }
+
+
+    public List<List<String>> cartesian(List<List<String>> list) {
+        List<List<String>> result = new ArrayList<List<String>>();
+        int numSets = list.size();
+        String[] tmpResult = new String[numSets];
+
+        cartesian(list, 0, tmpResult, result);
+
+        return result;
+    }
+
+
+    public static String removeLastCharacter(String str) {
+        String result = null;
+        if ((str != null) && (str.length() > 0)) {
+            result = str.substring(0, str.length() - 1);
+        }
+        return result;
+    }
+
+    public void cartesian(List<List<String>> list, int n,
+                          String[] tmpResult, List<List<String>> result) {
+        if (n == list.size()) {
+            result.add(new ArrayList<String>(Arrays.asList(tmpResult)));
+            return;
+        }
+
+        for (String i : list.get(n)) {
+            tmpResult[n] = i;
+            cartesian(list, n + 1, tmpResult, result);
+        }
+    }
+
 
     public String[] removeStopWord(String[] words) {
         String[] stopWords = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
@@ -346,20 +489,18 @@ public class Main {
         return tokens;
     }
 
-    private JSONObject addToMessage(SimilarObject simW, String stats, Document doc, String preview) {
+    private JSONObject addToMessage(SimilarObject simW, float weight, Document doc, String preview) {
         JSONObject messageSubItem = new JSONObject();
         messageSubItem.put("Term", simW.term);
         messageSubItem.put("Similarity", simW.similarity);
         messageSubItem.put("Title", doc.get(LuceneConstants.FILE_NAME));
         messageSubItem.put("Path", doc.get(LuceneConstants.FILE_PATH));
-        messageSubItem.put("Stats", stats);
+        messageSubItem.put("Weight", weight);
         messageSubItem.put("Preview", preview);
         messageSubItem.put("Date", doc.get(LuceneConstants.CREATION_DATE));
 
         return messageSubItem;
     }
-
-
 
 
     private int countWords(String str) {

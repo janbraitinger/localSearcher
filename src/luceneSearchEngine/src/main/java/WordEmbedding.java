@@ -11,7 +11,7 @@ public class WordEmbedding {
         this.w2vModel = WordVectorSerializer.readWord2VecModel(path);
     }
 
-    public ArrayList<SimilarObject> getSimWords(String word, int count) {
+    public ArrayList<SimilarObject> getSimilarObjects(String word, int count) {
         Collection<String> simWordsList = this.w2vModel.wordsNearest(word, count);
         ArrayList<SimilarObject> list = new ArrayList<>();
         long startTime = System.currentTimeMillis();
@@ -27,6 +27,18 @@ public class WordEmbedding {
 
 
         return list;
+
+    }
+
+    public Collection<String> getSimilarWords(String word, int count) {
+        ArrayList tmp = new ArrayList();
+        Collection a = this.w2vModel.wordsNearest(word, count);
+        tmp.add(word);
+        for(Object b : a){
+            tmp.add(b);
+        }
+
+        return tmp;
 
     }
 
