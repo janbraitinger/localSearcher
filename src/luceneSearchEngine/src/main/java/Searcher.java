@@ -173,7 +173,10 @@ public class Searcher {
 
 
         for (int i = 0; i < query.length; i++) {
+
             ArrayList tmpIndexes = getPositionOfTerms(docId, query[i]);
+            System.out.println(query[i]);
+            System.out.println(tmpIndexes.size());
             if(tmpIndexes.size() == 0){
                 return -1;
             }
@@ -241,7 +244,7 @@ public class Searcher {
 
 
     private ArrayList<Integer> getPositionOfTerms(int docId, String query) throws IOException {
-        //System.out.println("searching Position for term: <<" + query + ">>");
+        System.out.println("searching Position for term: <<" + query + ">>");
         ArrayList<Integer> positonList = new ArrayList<>();
         Terms vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
         TermsEnum terms = vector.iterator();

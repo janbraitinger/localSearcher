@@ -1,25 +1,15 @@
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.StopAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.util.Version;
-import org.bytedeco.javacv.FrameFilter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
-import java.lang.reflect.Array;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -224,7 +214,7 @@ public class Main {
 
         hits = searcher.search(newQuery);
         ScoreDoc[] _hits = hits.scoreDocs;
-
+        System.out.println("debug");
 
         for (ScoreDoc hit : _hits) {
             float bm25Score = searcher.getBM25Score(newQuery, hit.doc);
@@ -233,10 +223,11 @@ public class Main {
             int docId = hit.doc;
             int queryDistance = 1;
             if (multipleQueryFlag) {
+                System.out.println("--" + Arrays.toString(searchQueryArray));
                 queryDistance = searcher.calcIndexDistance(docId, searchQueryArray);
             }
+            System.out.println("debug2");
 
-            float documentWeight = bm25Score / queryDistance;
 
             docList.add(docId);
             String preview = "";
@@ -244,24 +235,41 @@ public class Main {
             try {
                 preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), newQuery, 8);
             } catch (Exception e) {
+                System.out.println("debug3");
                 preview = e.toString();
             }
             SimilarObject matchinQuery = new SimilarObject();
             matchinQuery.term = newQuery;
-            matchinQuery.similarity = 1;
+            matchinQuery.similarity = 5 * searchQueryArray.length;
+            float documentWeight = (float) ((bm25Score / queryDistance) + matchinQuery.similarity);
             directMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
         }
-
+        System.out.println("debug4");
 
         if (multipleQueryFlag) {
 
             ArrayList embeddingWordList = new ArrayList();
-
+            //ArrayList<ArrayList<SimilarObject>> embeddings = new ArrayList<>();
+            ArrayList<Collection> embeddings = new ArrayList<>();
             for (String query : searchQueryArray) {
 
-                Collection _embeddingTerms = searcher.pubmed.getSimilarWords(query, 25);
+                Collection _embeddingTerms = searcher.google.getSimilarWords(query, 25);
+               // Collection embeddingObjects = searcher.google.getSimilarObjects(query, 25);
+                //embeddings.add(embeddingObjects);
+
+
                 embeddingWordList.add(_embeddingTerms);
             }
+/*
+
+            for(Collection<SimilarObject> innerList : embeddings) {
+                for(SimilarObject a : innerList){
+                    System.out.println(a.term);
+                }
+            }
+
+*/
+
 
 
             List<List<String>> _result = cartesian(embeddingWordList);
@@ -269,14 +277,17 @@ public class Main {
 
 
 
-
             for(List<String> list : _result) {
                 String newEmbeddingMultipleQuery = "";
-                ArrayList<String> originlaEewEmbeddingMultipleQuery = new ArrayList();
+                String[] originlaEewEmbeddingMultipleQuery = new String[list.size()];
+                int i = 0;
                 for(String letter : list) {
                     newEmbeddingMultipleQuery += letter + " ";
-                    originlaEewEmbeddingMultipleQuery.add(letter);
+                    originlaEewEmbeddingMultipleQuery[i] = letter;
+                    i++;
+
                 }
+
 
                 try{
 
@@ -288,12 +299,23 @@ public class Main {
 
 
 
-                    System.out.println(newEmbeddingMultipleQuery);
-                    System.out.println(getroffen.length);
 
                     for (ScoreDoc hit : getroffen) {
 
                         if(!docList.contains(hit.doc)) {
+
+                            double sumSimilarity = 0;
+                            for(int j=0; j<searchQueryArray.length;j++){
+                                double similarity = searcher.google.getSimilarity(originlaEewEmbeddingMultipleQuery[j], searchQueryArray[j]);
+                                System.out.println(originlaEewEmbeddingMultipleQuery[j] + " - " + searchQueryArray[j] +" -> " + similarity);
+                                sumSimilarity += similarity;
+                            }
+
+                            sumSimilarity /= searchQueryArray.length;
+
+
+
+
 
                             System.out.println(searcher.getDocumentById(hit.doc).getField(LuceneConstants.FILE_NAME));
                             docList.add(hit.doc);
@@ -306,14 +328,17 @@ public class Main {
                                 preview = e.toString();
                             }
                             float bm25Score = searcher.getBM25Score(newEmbeddingMultipleQuery, hit.doc);
-                            float queryDistance = searcher.calcIndexDistance(hit.doc, searchQueryArray);
+                            System.out.println("--" + Arrays.toString(originlaEewEmbeddingMultipleQuery));
+                            float queryDistance = searcher.calcIndexDistance(hit.doc, originlaEewEmbeddingMultipleQuery);
 
+                            System.out.println("BM25: " + bm25Score);
+                            System.out.println("QueryDistance: " + queryDistance);
 
                             float documentWeight = bm25Score / queryDistance;
 
                             SimilarObject matchinQuery = new SimilarObject();
-                            matchinQuery.term = Arrays.toString(originlaEewEmbeddingMultipleQuery.toArray());
-                            matchinQuery.similarity = .5;
+                            matchinQuery.term = Arrays.toString(originlaEewEmbeddingMultipleQuery);
+                            matchinQuery.similarity = sumSimilarity;
 
 
                             googleCorpusMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
@@ -330,6 +355,8 @@ public class Main {
 
         }
         else {
+
+            System.out.println("debug5");
 
 
             //if just one matches - get other word
@@ -348,12 +375,13 @@ public class Main {
 
 
             for (SimilarObject simW : embeddingTerms) {
+                System.out.println("debug7");
 
                 hits = searcher.search(simW.term);
                 _hits = hits.scoreDocs;
 
                 for (ScoreDoc hit : _hits) {
-
+                    System.out.println("debug8");
                     int docId = hit.doc;
                     if (!docList.contains(docId)) {
 
@@ -361,7 +389,9 @@ public class Main {
                             docList.add(docId);
                         } catch (Exception e) {
                             e.printStackTrace();
-                            break;
+                            System.out.println("debug9");
+
+
                         }
                         //float bm25Score = searcher.getBM25Score(newQuery, hit.doc);
                         Document doc = searcher.getDocument(hit);
@@ -371,6 +401,7 @@ public class Main {
                         try {
                             preview = searcher.getPreviewOfSingleQuery(hit.doc, doc.get(LuceneConstants.FILE_PATH), simW.term, 8);
                         } catch (Exception e) {
+                            System.out.println("debug10");
 
                             preview = e.toString();
                         }
@@ -384,6 +415,8 @@ public class Main {
 
                 }
             }
+
+
         }
 
 /*
@@ -438,12 +471,14 @@ public class Main {
 
 
     public List<List<String>> cartesian(List<List<String>> list) {
+        long startTime = System.currentTimeMillis();
         List<List<String>> result = new ArrayList<List<String>>();
         int numSets = list.size();
         String[] tmpResult = new String[numSets];
 
         cartesian(list, 0, tmpResult, result);
-
+        long endTime = System.currentTimeMillis();
+        Console.print("Building all combinations needed " + (endTime-startTime) + " ms", 0);
         return result;
     }
 
@@ -518,6 +553,7 @@ public class Main {
         }
         return count;
     }
+
 
 
 }

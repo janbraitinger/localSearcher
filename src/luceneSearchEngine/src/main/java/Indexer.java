@@ -99,6 +99,9 @@ public class Indexer {
         //document.add(new Field(LuceneConstants.TERM_DETAILS, content, FieldType.LegacyNumericType.DOUBLE), ft));
 
 
+
+
+
         document.add(new Field(LuceneConstants.TERM_DETAILS, content, ft));
         document.add(new TextField(LuceneConstants.HIGHLIGHT_INDEX, content, Field.Store.YES));
         //System.out.println(content);

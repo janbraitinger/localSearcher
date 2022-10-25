@@ -13,10 +13,17 @@ public class WordEmbedding {
 
     public ArrayList<SimilarObject> getSimilarObjects(String word, int count) {
         Collection<String> simWordsList = this.w2vModel.wordsNearest(word, count);
+        ArrayList<String> tmp = new ArrayList();
+        for(Object b : simWordsList){
+            if(b.toString().chars().allMatch(Character::isLetter)){
+                tmp.add(b.toString().toLowerCase());
+            }
+
+        }
         ArrayList<SimilarObject> list = new ArrayList<>();
         long startTime = System.currentTimeMillis();
 
-        for (String simWord:simWordsList) {
+        for (String simWord:tmp) {
             SimilarObject similarObject = new SimilarObject();
             similarObject.similarity = this.w2vModel.similarity(simWord, word);
             similarObject.term = simWord;
@@ -31,15 +38,24 @@ public class WordEmbedding {
     }
 
     public Collection<String> getSimilarWords(String word, int count) {
+        long startTime = System.currentTimeMillis();
         ArrayList tmp = new ArrayList();
         Collection a = this.w2vModel.wordsNearest(word, count);
         tmp.add(word);
         for(Object b : a){
-            tmp.add(b);
-        }
+            if(b.toString().chars().allMatch(Character::isLetter)){
+                tmp.add(b.toString().toLowerCase());
+            }
 
+        }
+        long endTime = System.currentTimeMillis();
+        Console.print("Generating similar words needed " + (endTime-startTime) + " ms", 0);
         return tmp;
 
+    }
+
+    public double getSimilarity(String wordA, String wordB){
+        return this.w2vModel.similarity(wordA, wordB);
     }
 
 

@@ -9,6 +9,7 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
+  //"pageLength": 20,
   searching: true,
   paging: false,
   info: false,
@@ -28,6 +29,7 @@ const dataTable = $('#aexample').DataTable({
           className: 'text-center',
           targets: [1, 2, 3]
       },
+      { "width": "60%", "targets": 0 },
 
 
       {
@@ -264,12 +266,16 @@ function fillWeightCanvers(weight){
   //for( var i=0; i<canvases.length; i++){
     let canvas = document.getElementById("myCanvas"+canvasId)
     //let ctx = canvases[i].getContext('2d');
+    try{
     let ctx = canvas.getContext('2d');
     ctx.fillStyle = 'lightblue'
     ctx.fillRect(20, 20,logslider(weight), 100);
     
     ctx.stroke();    
     canvasId++
+  }catch{
+    return
+  }
 //}
 }
 
