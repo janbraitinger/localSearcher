@@ -84,9 +84,12 @@ io.sockets.on('connection', (socket) => {
 
     /* get triggerd by every key input by user in frontend */
     socket.on('search', (query) => {
+
         let arrayWords = query.split(/[ ,]+/)
+
         let word = search(arrayWords)
-        //console.log(word)
+        
+    
         socket.emit("autocomplete", word)
     });
 
@@ -160,21 +163,19 @@ var search = (query) => {
     var oldResults = ""
     for (let i = 0; i < query.length - 1; i++) {
         oldResults += query[i] + " "
+        
     }
     let succestions = []
     let checkDoubleWords = []
     for (let arr of holeArray) {
         let term = query[query.length - 1]
-
         if (arr.toLowerCase().startsWith(term.toLowerCase()) && term != "") {
             if (!checkDoubleWords.includes(arr.toLocaleLowerCase())) {
                 checkDoubleWords.push(arr.toLocaleLowerCase())
                 succestions.push(oldResults + arr.toLocaleLowerCase())
-                j++
-                if (j > MAXSUGGESTS) {
-                    return succestions
-
-                }
+                return succestions
+        
+                
             }
         }
     }

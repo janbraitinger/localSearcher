@@ -16,6 +16,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.opencv.core.Mat;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Array;
@@ -91,9 +92,37 @@ public class Searcher {
     }
 
 
-    /*
-    todo: fix getTerm()
-    public void writeIndexTerms() {
+
+    public void writeIndexTerms() throws IOException {
+
+        String path = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/indexData.txt";
+        FileWriter fileWriter = new FileWriter(path);
+        List<LeafReaderContext> list = reader.leaves();
+        String[] stopWordArray = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
+
+        for(String word: stopWordArray){
+            fileWriter.write(word + ",");
+            fileWriter.flush();
+        }
+
+
+        for (LeafReaderContext lrc : list) {
+            Terms terms = lrc.reader().terms(LuceneConstants.CONTENTS);
+            if (terms != null) {
+                TermsEnum termsEnum = terms.iterator();
+
+                BytesRef term;
+                while ((term = termsEnum.next()) != null) {
+   
+                    fileWriter.write(term.utf8ToString() + ",");
+                    fileWriter.flush();
+
+                }
+            }
+        }
+    }
+
+    /*public void writeIndexTerms() {
       String path = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/lucene_index/indexData.txt";
         try {
 
@@ -101,6 +130,7 @@ public class Searcher {
 
             Terms terms;
             terms = MultiTerms.getTerms(reader, LuceneConstants.CONTENTS);
+
 
 
             if (terms != null) {
@@ -116,8 +146,8 @@ public class Searcher {
             System.err.println(e);
         }
     }
-    */
 
+*/
 
     public float getBM25Score(String queryString, int docID) throws IOException, ParseException {
         Query query = queryParser.parse(queryString);

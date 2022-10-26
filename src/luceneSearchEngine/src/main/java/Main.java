@@ -45,6 +45,7 @@ public class Main {
             this.deleteIndex();
             this.createIndex();
             this.generateSearcherObj();
+            this.searcher.writeIndexTerms();
             //this.search("capital city spain");
             //BM25(capita, city, docId) + indexDistances
 
@@ -240,7 +241,7 @@ public class Main {
             }
             SimilarObject matchinQuery = new SimilarObject();
             matchinQuery.term = newQuery;
-            matchinQuery.similarity = 5 * searchQueryArray.length;
+            matchinQuery.similarity = searchQueryArray.length;
             float documentWeight = (float) ((bm25Score / queryDistance) + matchinQuery.similarity);
             directMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
         }

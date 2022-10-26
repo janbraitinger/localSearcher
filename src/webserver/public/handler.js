@@ -29,8 +29,8 @@ const dataTable = $('#aexample').DataTable({
           className: 'text-center',
           targets: [1, 2, 3]
       },
-      { "width": "60%", "targets": 0 },
-
+      { "width": "50%", "targets": 0 },
+      { "width": "25%", "targets": 1 },
 
       {
           target: 5,
@@ -91,23 +91,33 @@ socket.on("disconnect", (reason) => {
 //  something wrong and only 3 suggestions
 socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
   var dataArray = result
+  console.log(result)
   removeElements()
   if (dataArray != null) {
+    console.log("gg")
       for (let i of dataArray) {
           let word = "<b>" + i.substring(0, getSection.searchInputField.val().length) + "</b>"
           word += i.substring(getSection.searchInputField.val().length)
           $("#list").append("<li class='list-items'>" + word + "</li>");
+       
+
       }
+ 
   }
 });
 
 
+$("#list").click(function(e) {
+  getSection.searchInputField.val(e.target.innerText)
+  removeElements()
+});
+/*
 $("#list").on("click", function(e) {
   getSection.searchInputField.val(e.target.innerText)
   removeElements()
 
 });
-
+*/
 
 /*
 socket.on(RpcGetCall.RESULTLIST, (data) => {
