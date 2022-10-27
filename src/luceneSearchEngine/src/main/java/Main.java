@@ -19,17 +19,17 @@ import java.util.List;
 public class Main {
 
     String indexDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/index";
-    String dataDir = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData";
-    Indexer indexer;
+
     Searcher searcher;
     static String configFile = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/conf.ini";
     ConfManager cMan;
 
 
     private void generateSearcherObj() throws IOException, ParseException {
+        if(searcher != null) {
+            searcher = null;
+        }
         searcher = new Searcher(indexDir);
-
-
     }
 
     private void createConfManagerObj() throws IOException {
@@ -46,9 +46,6 @@ public class Main {
             this.createIndex();
             this.generateSearcherObj();
             this.searcher.writeIndexTerms();
-            //this.search("capital city spain");
-            //BM25(capita, city, docId) + indexDistances
-
             this.startSocketThread();
         } catch (Exception e) {
             Console.print(e.toString(), 2);
@@ -100,10 +97,11 @@ public class Main {
                             String path = obj.getString("path");
 
                             if (path != null) {
-                                changeDataDir(path);
-                                deleteIndex();
-                                String result = createIndex();
-
+                                this.changeDataDir(path);
+                                this.deleteIndex();
+                                String result = this.createIndex();
+                                this.searcher.setNewIndex(indexDir);
+                                this.searcher.writeIndexTerms();
                                 messageString = buildMessageString(SocketMessages.CHANGE_CONF, result);
                                 socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                                 break;
@@ -161,14 +159,15 @@ public class Main {
     }
 
 
-    private String createIndex() throws IOException {
-        indexer = new Indexer(indexDir);
+    private String createIndex() throws IOException, ParseException {
+        Indexer indexer = new Indexer(indexDir);
+
         int numIndexed;
         long startTime = System.currentTimeMillis();
         //numIndexed = indexer.createIndex(cMan.readConf("searching", "dataPath"), new TextFileFilter());
         String dirPath = cMan.readConf("searching", "dataPath");
         numIndexed = indexer.createIndex(dirPath, new TextFileFilter());
-        //System.out.println(cMan.readConf("searching", "dataPath"));
+        Console.print("dirPath is " + cMan.readConf("searching", "dataPath"),0);
         long endTime = System.currentTimeMillis();
         indexer.close();
         String result = numIndexed + " file(s) indexed, time taken: "
@@ -241,7 +240,7 @@ public class Main {
             }
             SimilarObject matchinQuery = new SimilarObject();
             matchinQuery.term = newQuery;
-            matchinQuery.similarity = searchQueryArray.length;
+            matchinQuery.similarity = searchQueryArray.length/2;
             float documentWeight = (float) ((bm25Score / queryDistance) + matchinQuery.similarity);
             directMatches.put(addToMessage(matchinQuery, documentWeight, doc, preview));
         }

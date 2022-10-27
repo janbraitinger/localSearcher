@@ -18,6 +18,7 @@ import org.opencv.core.Mat;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.sql.Array;
 import java.util.ArrayList;
@@ -51,7 +52,6 @@ public class Searcher {
     }
 
     public void setNewIndex(String indexDirectoryPath) throws IOException {
-
         Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
         reader = DirectoryReader.open(indexDirectory);
         indexSearcher = new IndexSearcher(reader);
@@ -79,47 +79,47 @@ public class Searcher {
         return indexSearcher.search(query, LuceneConstants.MAX_SEARCH);
     }
 
-    public long getDocCount() throws IOException {
-        return indexSearcher.collectionStatistics(LuceneConstants.FILE_NAME).maxDoc();
-    }
 
-    public long getCountOfAllWords() throws IOException {
-        return reader.getSumDocFreq(LuceneConstants.CONTENTS);
-    }
-
-    public long getWordCountOfDoc(int docid) {
-        return 0;
-    }
 
 
 
     public void writeIndexTerms() throws IOException {
 
         String path = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/src/indexData.txt";
-        FileWriter fileWriter = new FileWriter(path);
+
         List<LeafReaderContext> list = reader.leaves();
         String[] stopWordArray = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
 
+        FileWriter fwOb = new FileWriter(path, false);
+        PrintWriter pwOb = new PrintWriter(fwOb, false);
+        pwOb.flush();
+        pwOb.close();
+        fwOb.close();
+
+
+        FileWriter fileWriter = new FileWriter(path, true);
         for(String word: stopWordArray){
             fileWriter.write(word + ",");
             fileWriter.flush();
         }
 
+        int counter = 0;
 
         for (LeafReaderContext lrc : list) {
             Terms terms = lrc.reader().terms(LuceneConstants.CONTENTS);
             if (terms != null) {
                 TermsEnum termsEnum = terms.iterator();
-
                 BytesRef term;
                 while ((term = termsEnum.next()) != null) {
-   
+                    counter++;
                     fileWriter.write(term.utf8ToString() + ",");
                     fileWriter.flush();
 
                 }
             }
         }
+        Console.print("Wrote " + counter + " terms into autocomplete file",0);
+        fileWriter.close();
     }
 
     /*public void writeIndexTerms() {
