@@ -4,6 +4,8 @@ import org.deeplearning4j.models.word2vec.Word2Vec;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static java.util.stream.Collectors.toCollection;
+
 public class WordEmbedding {
     private Word2Vec w2vModel = null;
 
@@ -21,8 +23,6 @@ public class WordEmbedding {
 
         }
         ArrayList<SimilarObject> list = new ArrayList<>();
-        long startTime = System.currentTimeMillis();
-
         for (String simWord:tmp) {
             SimilarObject similarObject = new SimilarObject();
             similarObject.similarity = this.w2vModel.similarity(simWord, word);
@@ -30,14 +30,11 @@ public class WordEmbedding {
             list.add(similarObject);
         }
 
-        long endTime = System.currentTimeMillis();
-
-
         return list;
 
     }
 
-    public Collection<String> getSimilarWords(String word, int count) {
+    public ArrayList<String> getSimilarWords(String word, int count) {
         long startTime = System.currentTimeMillis();
         ArrayList tmp = new ArrayList();
         Collection a = this.w2vModel.wordsNearest(word, count);
@@ -50,7 +47,8 @@ public class WordEmbedding {
         }
         long endTime = System.currentTimeMillis();
         Console.print("Generating similar words needed " + (endTime-startTime) + " ms", 0);
-        return tmp;
+        return (ArrayList<String>) tmp.stream().collect(toCollection(ArrayList::new));
+        //return tmp;
 
     }
 

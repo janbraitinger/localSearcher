@@ -2,6 +2,8 @@ var messageConstants = require('./constants');
 
 
 
+
+
 const express = require('express')
 const path = require('path')
 const app = express()
@@ -16,7 +18,7 @@ const {
 const internal = require('stream')
 const {
     parse
-} = require('path')
+} = require('path');
 const io = require("socket.io")(http, {
     cors: {
         origin: "*"
@@ -24,7 +26,10 @@ const io = require("socket.io")(http, {
 });
 
 
-/* set origin path */
+
+
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 
@@ -47,8 +52,74 @@ function confJsonData() {
     return jsonString
 }
 
-/* socket connection to frontend and java backend */
+
+
+var luceneStatus = 0
+
+
+let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
+
+/*setInterval(async function(){ 
+    var sock = zmq.socket("req");
+    sock.connect("tcp://127.0.0.1:5556")
+    await sock.send(generateJSONMessage("ping","pong"))
+    await sock.on('message', function(data) {
+        console.log(data)
+    })
+    sock.close()
+
+
+}, 1000);
+*/
+
+
+
+//socket connection to frontend and java backend 
 io.sockets.on('connection', (socket) => {
+
+    var sock = zmq.socket('req');
+    var connectAddress = 'tcp://127.0.0.1:5556';
+    sock.connect(connectAddress);
+   
+
+
+
+
+
+    sock.on('message', function(data) {
+        var messageObj = JSON.parse(data)
+        var messageBody = null
+        try {
+            messageBody = messageObj["body"]
+        } catch {
+            messageBody = ""
+        }
+
+
+
+
+    switch (messageObj["header"]) {
+
+        case messageConstants.GET_DOCUMENT_LIST:
+            console.log(messageBody)
+            socket.emit("docResultList", messageBody)
+            break
+
+        case messageConstants.CHANGE_CONF:
+            socket.emit("stdout", messageBody)
+            break
+
+        case messageConstants.READ_CONF:
+            startPath = messageBody
+            break
+
+
+        default:
+            socket.emit("error", null);
+            break
+    }
+})
+
     connections.push(socket);
     logToConsole('socket ' + socket.id + ' is connected. ' + connections.length + ' active');
 
@@ -61,9 +132,9 @@ io.sockets.on('connection', (socket) => {
             tmpPathObj.path = path
 
             let setNewConf = generateJSONMessage(messageConstants.CHANGE_CONF, JSON.stringify(tmpPathObj))
-            middlewear(setNewConf, socket)
+            sock.send(setNewConf)
             startPath = path
-        
+
             var array = []
             try {
                 fs.readdirSync(startPath).forEach(file => {
@@ -74,7 +145,8 @@ io.sockets.on('connection', (socket) => {
                 return
             }
 
-      
+
+
             socket.emit("stdout", JSON.stringify(array))
             return
         }
@@ -82,80 +154,50 @@ io.sockets.on('connection', (socket) => {
 
     })
 
-    /* get triggerd by every key input by user in frontend */
+    // get triggerd by every key input by user in frontend 
     socket.on('search', (query) => {
 
         let arrayWords = query.split(/[ ,]+/)
 
         let word = search(arrayWords)
-        
-    
+
+
         socket.emit("autocomplete", word)
     });
 
 
     socket.on('finalSearch', (data) => {
         let sendSearchQuery = generateJSONMessage(messageConstants.GET_DOCUMENT_LIST, data)
-        middlewear(sendSearchQuery, socket)
-    })
+        sock.send(sendSearchQuery)
 
 
 
-    socket.on('disconnect', () => {
-        connections.pop(socket)
-        logToConsole('socket ' + socket.id + ' is disconnected. ' + connections.length + ' active');
-    })
+        socket.on('disconnect', () => {
+            connections.pop(socket)
+            logToConsole('socket ' + socket.id + ' is disconnected. ' + connections.length + ' active');
+        })
+
+
+    
+
+    });
 });
 
 
 
-function generateJSONMessage(header, body, subBody=""){
+function generateJSONMessage(header, body = "", subBody = "") {
     var senderObj = new Object()
     senderObj.header = header
-    senderObj.body  = body;
+    senderObj.body = body;
     senderObj.body.subBody = subBody
     return JSON.stringify(senderObj)
 }
 
-/* get final search query, send it to java backend and wait for anwser */
-async function middlewear(para, socket = null) {
- 
-    const sock = zmq.socket("req");
-    sock.connect("tcp://127.0.0.1:5556")
-    var words = para.split(/\W+/).filter(function(token) {
-        return token.toLowerCase();
-    });
 
- 
 
-    console.log("send: " + para)
-    await sock.send(para)
+var pingPong = 0;
 
-    sock.on('message', function(data) {
-        var messageObj = JSON.parse(data)
-        var messageBody = messageObj["body"]
- 
 
-        switch (messageObj["header"]) {
-            
-            case messageConstants.GET_DOCUMENT_LIST:
-                socket.emit("docResultList", messageBody)
-                break
-
-            case messageConstants.CHANGE_CONF:
-                socket.emit("stdout", messageBody)
-                break
-
-            case messageConstants.READ_CONF:
-                startPath = messageBody
-                break
-
-            default:
-                socket.emit("error", null);
-                break
-        }
-    });
-}
 
 
 var search = (query) => {
@@ -163,7 +205,7 @@ var search = (query) => {
     var oldResults = ""
     for (let i = 0; i < query.length - 1; i++) {
         oldResults += query[i] + " "
-        
+
     }
     let succestions = []
     let checkDoubleWords = []
@@ -172,29 +214,42 @@ var search = (query) => {
         if (arr.toLowerCase().startsWith(term.toLowerCase()) && term != "") {
             if (!checkDoubleWords.includes(arr.toLocaleLowerCase())) {
                 checkDoubleWords.push(arr.toLocaleLowerCase())
-                succestions.push(oldResults + arr.toLocaleLowerCase())
-                return succestions
-        
-                
+
+                let a = getTermsByString(term, oldResults)
+                console.log(a)
+                return a
+
+
+
             }
         }
     }
 }
 
 
-/* send root html file to client */
+function getTermsByString(searchInput, oldResults) {
+    var tmp = []
+    var i = 0
+    for (let arr of holeArray) {
+        if (arr.toLowerCase().startsWith(searchInput.toLowerCase()) && i < 25) {
+            tmp.push(oldResults + arr.toLocaleLowerCase())
+            i++
+        }
+    }
+    return tmp
+}
+
+// send root html file to client 
 app.get('/', function(req, res) {
     res.sendFile('views/index.html', {
         root: __dirname
     })
 });
 
-/* run server*/
 http.listen(port, () => {
     logToConsole(`Example app listening on port ${port}`)
 })
 
-/* log helper */
 function logToConsole(message) {
     console.log("[" + new Date().toLocaleTimeString() + "] " + message);
 }
@@ -219,13 +274,8 @@ app.post("/getFile", urlencodedParser, (req, res) => {
 });
 
 
-function getFirstDirPath(){
-    _flag = false
-    if (!_flag) {
-        let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
-        middlewear(getConf, null)
-        _flag = true
-    }
+function getFirstDirPath() {
+
 }
 
 

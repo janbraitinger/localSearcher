@@ -9,9 +9,10 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
-  //"pageLength": 20,
+  "pageLength": 10,
+  pagingType: 'full_numbers',
   searching: true,
-  paging: false,
+  paging: true,
   info: false,
   "destroy": true,
   responsive: true,
@@ -29,8 +30,14 @@ const dataTable = $('#aexample').DataTable({
           className: 'text-center',
           targets: [1, 2, 3]
       },
-      { "width": "50%", "targets": 0 },
-      { "width": "25%", "targets": 1 },
+      {
+          "width": "50%",
+          "targets": 0
+      },
+      {
+          "width": "25%",
+          "targets": 1
+      },
 
       {
           target: 5,
@@ -88,56 +95,108 @@ socket.on("disconnect", (reason) => {
 });
 
 
+
+
 //  something wrong and only 3 suggestions
 socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
   var dataArray = result
-  console.log(result)
+
   removeElements()
   if (dataArray != null) {
-    console.log("gg")
+      $("#list").show()
       for (let i of dataArray) {
+
           let word = "<b>" + i.substring(0, getSection.searchInputField.val().length) + "</b>"
           word += i.substring(getSection.searchInputField.val().length)
           $("#list").append("<li class='list-items'>" + word + "</li>");
-       
+
 
       }
- 
+
   }
 });
+
+
+
+$("#connectedStatus").hide()
+$("#disconnectedStatus").hide()
+
+
+setInterval(function() {
+
+
+
+
+  socket.on("luceneStatus", (status) => {
+
+
+      $("#waitingStatus").hide()
+      switch (status) {
+          case 0:
+
+              $("#disconnectedStatus").show()
+              $("#connectedStatus").hide()
+              break
+          case 1:
+              $("#disconnectedStatus").hide()
+              $("#connectedStatus").show()
+              break
+          default:
+              $("#waitingStatus").show()
+              $("#disconnectedStatus").hide()
+              $("#connectedStatus").hide()
+              break
+
+      }
+  })
+
+}, 1000);
+
+
+$(document).on('keypress', function(e) {
+  if (e.which == 13) {
+
+      e.preventDefault();
+      var searchQuery = getSection.searchInputField.val();
+
+      removeElements()
+      dataTable.clear().draw()
+
+
+
+      if (searchQuery.length > 0) {
+
+          getSection.loader.show()
+
+          socket.emit(RpcSendCall.SEARCH, searchQuery)
+
+      }
+  }
+});
+
+$(window).click(function() {
+  removeElements()
+});
+
 
 
 $("#list").click(function(e) {
+  e.stopPropagation();
   getSection.searchInputField.val(e.target.innerText)
+
   removeElements()
 });
-/*
-$("#list").on("click", function(e) {
-  getSection.searchInputField.val(e.target.innerText)
-  removeElements()
 
-});
-*/
-
-/*
-socket.on(RpcGetCall.RESULTLIST, (data) => {
-  let jsonData = JSON.parse(data)
-  var stringData = ""
-  for (let i of jsonData) {
-      stringData += "- " + i + "<br/>"
-  }
-  getSection.dirContentList.html(stringData)
-})
-*/
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
   canvasId = 0
+  console.log(data)
   showResultList(docs)
 
   getSection.loader.hide()
-
+  $("#aexample_paginate").show()
 });
 
 // conf data could contain multiple elements in future
@@ -146,11 +205,6 @@ socket.on(RpcGetCall.CONF, (confData) => {
   getSection.dirPath.val(newPath);
 })
 
-
-socket.on("error", () =>{
-  alert("error")
-  
-})
 
 
 socket.on(RpcGetCall.SERVERMESSAGE, (data) => {
@@ -175,15 +229,15 @@ getSection.searchButton.click(function() {
 
   removeElements()
   dataTable.clear().draw()
-  
 
 
-  if(searchQuery.length>0){
 
-  getSection.loader.show()
+  if (searchQuery.length > 0) {
 
-  socket.emit(RpcSendCall.SEARCH, searchQuery)
-}
+      getSection.loader.show()
+
+      socket.emit(RpcSendCall.SEARCH, searchQuery)
+  }
 });
 
 
@@ -223,7 +277,7 @@ getSection.filterButton.click(() => {
 
 var canvasId = 0
 
-function handleListElement(MATCHING, img, obj, i) {
+function handleListElement(MATCHING, obj) {
   var getTerm = ""
   var getWeight = ""
   try {
@@ -237,15 +291,16 @@ function handleListElement(MATCHING, img, obj, i) {
   termArray.push(getTerm)
 
 
-  let termButton = "<button class='termBtn' style='background-color:" + selectMatching(MATCHING) + ";'>" + getTerm + "</button>"
-  let weight = getWeight + obj.Similarity
+  let termButton = "<button class='termBtn' style='background-color:" + selectMatching(obj.Matching) + ";'>" + getTerm + "</button>"
+  let weight = obj.Weight
   let weightResult = parseFloat(weight).toFixed(2);
 
 
 
-  let canvas = "<canvas class='weightCanvas' id='myCanvas"+canvasId +"'>Your browser does not support the HTML5 canvas tag.</canvas>"
+  let canvas = "<canvas class='weightCanvas' id='myCanvas" + canvasId + "'>Your browser does not support the HTML5 canvas tag.</canvas>"
 
   dataTable.row.add([obj.Title, obj.Date, termButton, canvas, weightResult, obj.Path, obj.Preview]).draw(true);
+
 
   $('#aexample').show()
   fillWeightCanvers(weightResult)
@@ -262,31 +317,31 @@ function logslider(position) {
   var maxv = Math.log(10000);
 
   // calculate adjustment factor
-  var scale = (maxv-minv) / (maxp-minp);
+  var scale = (maxv - minv) / (maxp - minp);
 
-  return Math.exp(minv + scale*(position-minp));
+  return Math.exp(minv + scale * (position - minp));
 }
 
 
 
-function fillWeightCanvers(weight){
+function fillWeightCanvers(weight) {
 
 
   //var canvases = document.getElementsByTagName('canvas');
   //for( var i=0; i<canvases.length; i++){
-    let canvas = document.getElementById("myCanvas"+canvasId)
-    //let ctx = canvases[i].getContext('2d');
-    try{
-    let ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'lightblue'
-    ctx.fillRect(20, 20,logslider(weight), 100);
-    
-    ctx.stroke();    
-    canvasId++
-  }catch{
-    return
+  let canvas = document.getElementById("myCanvas" + canvasId)
+  //let ctx = canvases[i].getContext('2d');
+  try {
+      let ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'lightblue'
+      ctx.fillRect(20, 20, logslider(weight), 100);
+
+      ctx.stroke();
+      canvasId++
+  } catch {
+      return
   }
-//}
+  //}
 }
 
 
@@ -302,8 +357,8 @@ $('#aexample tbody').on('click', 'tr', function() {
   $('.btn-primary').off('click');
 
   $('.btn-primary').click(function() { //downloadButton on modal
-    ajaxDownload(path)
-});
+      ajaxDownload(path)
+  });
 
   $("#amyModal").modal("show");
 });
@@ -312,36 +367,26 @@ $('#aexample tbody').on('click', 'tr', function() {
 
 function showResultList(jsonPara) {
 
-
+  getSection.searchResults.hide()
   getSection.searchResults.html("")
   const matching = [Constant.DIRECT_MATCHING, Constant.GOOGLE_EMBEDDING, Constant.PUPMED_EMBEDDING]
   var matchingId = 0
   var objCount = 0
   for (let itemCollection of jsonPara) {
-      var selectMatching = matching[matchingId]
 
-      for (let i = 0; i < itemCollection.length; i++) {
-
-
-          var img = document.createElement('img');
-
-          if (itemCollection[i].Type == "pdf") {
-              img.src = "img/pdf_icon.png"
-          } else {
-              img.src = "img/txt_icon.png"
-          }
-
-          var liElement = handleListElement(selectMatching, img, itemCollection[i], i)
-          getSection.searchResults.append(liElement)
-          objCount++
-      }
+      let selectMatching = matching[matchingId]
+      let liElement = handleListElement(selectMatching, itemCollection)
+      getSection.searchResults.append(liElement)
       matchingId++
 
+
   }
+
+
+  getSection.docCounter.show()
   getSection.docCounter.html(objCount + " documents found")
 
   if (termArray.length > 0) {
-
       var longest = termArray.reduce(
           function(a, b) {
               return a.length > b.length ? a : b;
@@ -355,36 +400,6 @@ function showResultList(jsonPara) {
 
 
 
-/*
-$(document).on("click", ".list-group-item", function() {
-let title = $(this).attr("data-title")
-let path = $(this).attr("data-path")
-let term = $(this).attr("data-term")
-let stats = $(this).attr("data-stats")
-let preview = $(this).attr("data-preview")
-let creationDate = $(this).attr("data-date")
-
-console.log(preview)
-
-$('.modal-title').html("<span style='word-break: break-all;'>" + title + "</span>")
-
-//$('.modal-body-path').html("hier kommt der Text")
-
-$('.modal-body').html("<p class='preivew'>"+preview+"</p>"+
-"<p><b>Term: </b>"+term+"</p>" + 
-"<p><b>Date: </b> "+creationDate+" </p>"+
-"<p style='word-break: break-all;'><b>Path:</b> "+path+" <button type='button' class='btn btn-dark' id='getDoc' value='" + path + "'>View/Download</button><br/>" + "" + "</p>")
-
-//<hr/>similar documents:<ul style='padding-left:15px;'><li>document A</li><li>document B</li></ul>
-
-$('#getDoc').click(function() {
-    path = $(this).attr("value")
-    ajaxDownload(path)
-
-});
-});
-*/
-
 $(".checkbox-menu").on("change", "input[type='checkbox']", function() {
   $(this).closest("li").toggleClass("active", this.checked);
 });
@@ -396,11 +411,6 @@ $(document).on('click', '.allow-focus', function(e) {
 
 
 
-/*
-function loadEntry() {
-socket.emit(RpcSendCall.CHECK_INDEX)
-}
-*/
 
 getSection.changeIndexBtn.on("click", function() {
   //loadEntry()
@@ -423,7 +433,6 @@ function logToConsole(message) {
 
 
 
-
 function ajaxDownload(file) {
 
   $.ajax({
@@ -439,7 +448,7 @@ function ajaxDownload(file) {
       success: function(response, status, xhr) {
 
           //var fileName = xhr.getResponseHeader('Content-Disposition').split('"')[1].split('"')[0]
-       
+
 
           var a = document.createElement('a');
           var url = window.URL.createObjectURL(response);
@@ -529,4 +538,4 @@ $(document).ready(function() {
       dataTable.draw();
       console.log("drwaew")
   });
-}); 
+});
