@@ -24,7 +24,28 @@ public class SearchObject {
         this.useEmbeddings = true;
     }
 
-    public List<List<String>> getMultipleCombinations(){
+    public List<List<List<String>>> getEmbeddings(){
+        ArrayList pubMedList = new ArrayList();
+        ArrayList googleList = new ArrayList();
+        for (String query : this.getQueryArray()) {
+            ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 25);
+            ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 25);
+            pubMedList.add(pubmedEmbeddings);
+            googleList.add(googleEmbeddings);
+        }
+
+        List<List<String>> googleCombinations = cartesian(googleList);
+        List<List<String>> pubmedCombinations = cartesian(pubMedList);
+        List<List<List<String>>> listOfLists = new ArrayList<>();
+
+        listOfLists.add(pubmedCombinations);
+        listOfLists.add(googleCombinations);
+
+        return listOfLists;
+
+    }
+
+    public List<List<String>> getEmbeddingTermsA(){
         ArrayList listOfSimilarLists = new ArrayList();
 
 
@@ -51,19 +72,34 @@ public class SearchObject {
 
     }
 
-    public double getSimilarityTo(String embedding) {
+    public double getSimilarityTo(String embedding, int embeddingType) {
         if(this.IS_MULTIPLE){
             String[] tmp = embedding.split("\\W+");
             int i = 0;
             float sumSimilarity = 0;
             for(String term : tmp){
-                sumSimilarity += this.searcher.google.getSimilarity(term, this.getQueryArray()[i]);
+                if(embeddingType == 1){
+                    sumSimilarity += this.searcher.pubmed.getSimilarity(term, this.getQueryArray()[i]);
+                }
+                if(embeddingType == 2){
+                    sumSimilarity += this.searcher.google.getSimilarity(term, this.getQueryArray()[i]);
+                }
+
                 i++;
             }
             return sumSimilarity/tmp.length;
         }
         embedding = this.removeLastCharacter(embedding);
-        return this.searcher.google.getSimilarity(this.QUERY, embedding);
+
+        if(embeddingType == 1){
+            return this.searcher.pubmed.getSimilarity(this.QUERY, embedding);
+        }
+        if(embeddingType == 2){
+            return this.searcher.google.getSimilarity(this.QUERY, embedding);
+        }
+
+
+        return 0;
     }
 
 

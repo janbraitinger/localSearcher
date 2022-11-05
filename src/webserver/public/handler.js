@@ -9,7 +9,8 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
-  "pageLength": 10,
+  "pageLength": 20,
+
   pagingType: 'full_numbers',
   searching: true,
   paging: true,
@@ -117,6 +118,18 @@ socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
 });
 
 
+window.onbeforeunload = function(){
+  socket.emit('disconnect', "");
+};
+
+
+socket.on("bradcast", (status) => {
+
+})
+
+
+
+
 
 $("#connectedStatus").hide()
 $("#disconnectedStatus").hide()
@@ -192,7 +205,10 @@ $("#list").click(function(e) {
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
   canvasId = 0
-  console.log(data)
+
+
+  getSection.docCounter.show()
+  getSection.docCounter.html(docs.length + " documents found")
   showResultList(docs)
 
   getSection.loader.hide()
@@ -254,11 +270,11 @@ getSection.searchInputField.keyup((e) => {
 function selectMatching(operator) {
   switch (operator) {
       case 0:
-          break
+          return "#b09eb7"
       case 2:
-          return "#daedd3"
+          return "#e8d5ef"
       case 1:
-          return "#e6d3ed"
+          return "#d0bdd6"
       default:
           return "#fff"
   }
@@ -291,7 +307,7 @@ function handleListElement(MATCHING, obj) {
   termArray.push(getTerm)
 
 
-  let termButton = "<button class='termBtn' style='background-color:" + selectMatching(obj.Matching) + ";'>" + getTerm + "</button>"
+  let termButton = "<button class='termBtn' style='background-color:" + selectMatching(obj.Matching) + "; color:#fff;'>" + getTerm + "</button>"
   let weight = obj.Weight
   let weightResult = parseFloat(weight).toFixed(2);
 
@@ -383,8 +399,6 @@ function showResultList(jsonPara) {
   }
 
 
-  getSection.docCounter.show()
-  getSection.docCounter.html(objCount + " documents found")
 
   if (termArray.length > 0) {
       var longest = termArray.reduce(

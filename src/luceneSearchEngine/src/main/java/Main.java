@@ -219,33 +219,37 @@ public class Main {
             TopDocs embeddingHit;
             ScoreDoc[] hitCollection;
             try {
+                int embedding = 1;
+                for(List<List<String>> embeddingList : searchObject.getEmbeddings()) {
 
-                for (List<String> singleCombination : searchObject.getMultipleCombinations()) {
+                    for (List<String> singleCombination : embeddingList) {
 
-                    String newSearchQuery = new String();
+                        String newSearchQuery = new String();
 
-                    for (String term : singleCombination) {
-                        newSearchQuery += term + " ";
-                    }
-
-                    embeddingHit = searcher.search(newSearchQuery);
-                    hitCollection = embeddingHit.scoreDocs;
-                    for (ScoreDoc hit : hitCollection) {
-
-                        int docId = hit.doc;
-                        if (!searchObject.hitDocs.contains(docId)) {
-                            searchObject.hitDocs.add(docId);
-                            Document document = searcher.getDocument(hit);
-                            double similarity = searchObject.getSimilarityTo(newSearchQuery);
-                            float weight = (float) (searchObject.getWeight(docId) + similarity);
-
-                            String preview = searchObject.getPreview(docId, document.get(LuceneConstants.FILE_PATH));
-                            JSONObject jsonMessage = buildMessage(LuceneConstants.EMBEDDING_MATCHING, newSearchQuery, weight, document, preview);
-                            addHitsToMessage.add(jsonMessage);
+                        for (String term : singleCombination) {
+                            newSearchQuery += term + " ";
                         }
+
+                        embeddingHit = searcher.search(newSearchQuery);
+                        hitCollection = embeddingHit.scoreDocs;
+                        for (ScoreDoc hit : hitCollection) {
+
+                            int docId = hit.doc;
+                            if (!searchObject.hitDocs.contains(docId)) {
+                                searchObject.hitDocs.add(docId);
+                                Document document = searcher.getDocument(hit);
+                                double similarity = searchObject.getSimilarityTo(newSearchQuery, embedding);
+                                float weight = (float) (searchObject.getWeight(docId) + similarity);
+
+                                String preview = searchObject.getPreview(docId, document.get(LuceneConstants.FILE_PATH));
+                                JSONObject jsonMessage = buildMessage(embedding, newSearchQuery, weight, document, preview);
+                                addHitsToMessage.add(jsonMessage);
+                            }
+                        }
+
+
                     }
-
-
+                    embedding++;
                 }
             } catch (Exception e) {
                 e.printStackTrace();

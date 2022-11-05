@@ -35,8 +35,8 @@ public class Searcher {
         setNewIndex(indexDirectoryPath);
        google = new WordEmbedding();
        google.loadModel(Path.EMBEDDINGS + "googleCorpus.bin");
-       /* pubmed = new WordEmbedding();
-        pubmed.loadModel(embeddingDir + "pubmed.bin");*/
+       pubmed = new WordEmbedding();
+        pubmed.loadModel(Path.EMBEDDINGS  + "pubmed.bin");
 
 
     }

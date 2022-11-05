@@ -31,16 +31,13 @@ const io = require("socket.io")(http, {
 
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-
-var googleWords = []
-var pubMedWords = []
-var indexCorpus = []
-const connections = [];
-var MAXSUGGESTS = 25
-
-
 var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
+let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
+var connections = [];
+
+
+
+
 
 
 var startPath = ""
@@ -54,23 +51,11 @@ function confJsonData() {
 
 
 
-var luceneStatus = 0
 
 
-let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
-
-/*setInterval(async function(){ 
-    var sock = zmq.socket("req");
-    sock.connect("tcp://127.0.0.1:5556")
-    await sock.send(generateJSONMessage("ping","pong"))
-    await sock.on('message', function(data) {
-        console.log(data)
-    })
-    sock.close()
 
 
-}, 1000);
-*/
+
 
 
 
@@ -81,9 +66,7 @@ io.sockets.on('connection', (socket) => {
     var connectAddress = 'tcp://127.0.0.1:5556';
     sock.connect(connectAddress);
    
-
-
-
+    //socket.broadcast.emit('', "")
 
 
     sock.on('message', function(data) {
@@ -101,7 +84,6 @@ io.sockets.on('connection', (socket) => {
     switch (messageObj["header"]) {
 
         case messageConstants.GET_DOCUMENT_LIST:
-            console.log(messageBody)
             socket.emit("docResultList", messageBody)
             break
 
@@ -120,13 +102,15 @@ io.sockets.on('connection', (socket) => {
     }
 })
 
-    connections.push(socket);
-    logToConsole('socket ' + socket.id + ' is connected. ' + connections.length + ' active');
+    connections.push(socket.id);
+
+
+
+    logToConsole('socket ' + socket.id + ' is connected -> ' + connections.length + ' client(s) active');
 
     socket.emit("conf", confJsonData())
 
     socket.on('newIndex', (path) => {
-        console.log("+++" + path)
         if (fs.existsSync(path)) {
             let tmpPathObj = new Object()
             tmpPathObj.path = path
@@ -169,18 +153,18 @@ io.sockets.on('connection', (socket) => {
     socket.on('finalSearch', (data) => {
         let sendSearchQuery = generateJSONMessage(messageConstants.GET_DOCUMENT_LIST, data)
         sock.send(sendSearchQuery)
+    })
 
 
 
-        socket.on('disconnect', () => {
-            connections.pop(socket)
-            logToConsole('socket ' + socket.id + ' is disconnected. ' + connections.length + ' active');
-        })
+    socket.on('disconnect', () => {
+        connections.pop(socket.id)
+        logToConsole('socket ' + socket.id + ' is disconnected -> ' + connections.length + ' client(s) active');
 
-
-    
-
-    });
+        socket.disconnect(true)
+        sock.disconnect(connectAddress)
+        sock.close()
+    })
 });
 
 
@@ -214,9 +198,7 @@ var search = (query) => {
         if (arr.toLowerCase().startsWith(term.toLowerCase()) && term != "") {
             if (!checkDoubleWords.includes(arr.toLocaleLowerCase())) {
                 checkDoubleWords.push(arr.toLocaleLowerCase())
-
                 let a = getTermsByString(term, oldResults)
-                console.log(a)
                 return a
 
 
