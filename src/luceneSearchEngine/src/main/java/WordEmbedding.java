@@ -1,6 +1,7 @@
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -35,6 +36,10 @@ public class WordEmbedding {
     }
 
     public ArrayList<String> getSimilarWords(String word, int count) {
+
+
+
+
         long startTime = System.currentTimeMillis();
         ArrayList tmp = new ArrayList();
         Collection a = this.w2vModel.wordsNearest(word, count);
@@ -55,7 +60,6 @@ public class WordEmbedding {
     public double getSimilarity(String wordA, String wordB){
         return this.w2vModel.similarity(wordA, wordB);
     }
-
 
 }
 

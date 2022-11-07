@@ -205,10 +205,10 @@ $("#list").click(function(e) {
 socket.on(RpcGetCall.RESULTLIST, (data) => {
   let docs = JSON.parse(data)
   canvasId = 0
+  console.log(docs)
 
 
-  getSection.docCounter.show()
-  getSection.docCounter.html(docs.length + " documents found")
+
   showResultList(docs)
 
   getSection.loader.hide()
@@ -389,7 +389,12 @@ function showResultList(jsonPara) {
   var matchingId = 0
   var objCount = 0
   for (let itemCollection of jsonPara) {
-
+      if(itemCollection["time"] || itemCollection["stats"]){
+        
+        getSection.docCounter.show()
+        getSection.docCounter.html("found " + jsonPara.length-- + " documents in " + itemCollection["time"] + " ms <br/> "+ JSON.stringify(itemCollection["stats"]))
+        break
+      }
       let selectMatching = matching[matchingId]
       let liElement = handleListElement(selectMatching, itemCollection)
       getSection.searchResults.append(liElement)

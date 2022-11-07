@@ -127,7 +127,7 @@ public class Searcher {
         String text = getDocumentById(docId).get(LuceneConstants.HIGHLIGHT_INDEX);
         String highlight;
         try {
-            highlight = highlighter.getBestFragments(stream, text, 25)[0];
+            highlight = highlighter.getBestFragments(stream, text, 50)[0];
         }catch(Exception e){
             highlight = "No preview available";
         }
@@ -141,8 +141,8 @@ public class Searcher {
         for (int i = 0; i < query.length; i++) {
 
             ArrayList tmpIndexes = getIndexPositionOfTerm(docId, query[i]);
-            System.out.println(query[i]);
-            System.out.println(tmpIndexes.size());
+            //System.out.println(query[i]);
+            //System.out.println(tmpIndexes.size());
             if(tmpIndexes.size() == 0){
                 return 1;
             }
@@ -204,7 +204,7 @@ public class Searcher {
 
 
     private ArrayList<Integer> getIndexPositionOfTerm(int docId, String query) throws IOException {
-        System.out.println("searching Position for term: <<" + query + ">>");
+        //System.out.println("searching Position for term: <<" + query + ">>");
         ArrayList<Integer> positonList = new ArrayList<>();
         Terms vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
         TermsEnum terms = vector.iterator();

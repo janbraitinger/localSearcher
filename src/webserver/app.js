@@ -31,13 +31,14 @@ const io = require("socket.io")(http, {
 
 
 app.use(express.static(path.join(__dirname, 'public')));
-var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
-let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
+
+
+
 var connections = [];
+var MAXSUGGESTS = 25
 
 
-
-
+var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
 
 
 var startPath = ""
@@ -53,7 +54,7 @@ function confJsonData() {
 
 
 
-
+let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
 
 
 
@@ -151,7 +152,7 @@ io.sockets.on('connection', (socket) => {
 
 
     socket.on('finalSearch', (data) => {
-        let sendSearchQuery = generateJSONMessage(messageConstants.GET_DOCUMENT_LIST, data)
+        let sendSearchQuery = generateJSONMessage(messageConstants.GET_DOCUMENT_LIST, data, 123)
         sock.send(sendSearchQuery)
     })
 
@@ -173,7 +174,7 @@ function generateJSONMessage(header, body = "", subBody = "") {
     var senderObj = new Object()
     senderObj.header = header
     senderObj.body = body;
-    senderObj.body.subBody = subBody
+    senderObj.subBody = subBody
     return JSON.stringify(senderObj)
 }
 

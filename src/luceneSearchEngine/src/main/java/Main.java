@@ -75,6 +75,8 @@ public class Main {
                 switch (header) {
                     case SocketMessages.SEND_DOCUMENT_LIST:
                         String query = (String) inputMessageObj.get("body");
+                        //String subBody = (String) inputMessageObj.get("subBody");
+                       // System.out.println(subBody);
                         Console.print("Searching for query '" + query + "'", 0);
                         ArrayList<JSONObject> resultList = search(query);
                         messageString = buildMessageString(SocketMessages.SEND_DOCUMENT_LIST, resultList.toString());
@@ -187,11 +189,12 @@ public class Main {
 
 
     private ArrayList<JSONObject> search(String searchQuery) throws IOException, ParseException, InvalidTokenOffsetsException {
-
+        long startTime = System.currentTimeMillis();
         ArrayList<JSONObject> addHitsToMessage = new ArrayList<>();
 
         SearchObject searchObject = new SearchObject(searchQuery, searcher);
         searchObject.activateEmbeddings();
+
 
         TopDocs directHits = searcher.search(searchObject.getQueryString());
         ScoreDoc[] directHitCollection = directHits.scoreDocs;
@@ -205,7 +208,7 @@ public class Main {
                 searchObject.hitDocs.add(docId);
 
                 Document document = searcher.getDocument(hit);
-                float weight = searchObject.getWeight(docId) + 4;
+                float weight = searchObject.getWeight(docId) + 2;
 
                 String preview = searchObject.getPreview(docId, document.get(LuceneConstants.FILE_PATH));
                 JSONObject jsonMessage = buildMessage(LuceneConstants.NORMAL_MATCHING, searchObject.getQueryString(), weight, document, preview);
@@ -255,12 +258,19 @@ public class Main {
                 e.printStackTrace();
             }
         }
+        JSONObject resultCounter = new JSONObject();
+        long estimatedTime = System.currentTimeMillis() - startTime;
 
         Console.print("Found " + addHitsToMessage.size() + " documents as result", 0);
+        HashMap timeStats = searchObject.getTimeStats();
+
+        resultCounter.put("time", estimatedTime);
+        resultCounter.put("stats", new JSONObject(timeStats));
+
+        addHitsToMessage.add(resultCounter);
         return addHitsToMessage;
 
     }
-
 
     private JSONObject buildMessage(int matchingOperation, String term, float weight, Document doc, String preview) {
         JSONObject messageSubItem = new JSONObject();

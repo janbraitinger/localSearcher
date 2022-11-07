@@ -3,6 +3,8 @@ import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SearchObject {
 
@@ -12,6 +14,7 @@ public class SearchObject {
     private ArrayList<String> similarTerms;
     public boolean useEmbeddings = false;
     public ArrayList<Integer> hitDocs = new ArrayList<>();
+    private HashMap<String, Long> timeStats = new HashMap<String, Long>();
 
 
     public SearchObject(String query, Searcher searcher) {
@@ -24,14 +27,27 @@ public class SearchObject {
         this.useEmbeddings = true;
     }
 
+
     public List<List<List<String>>> getEmbeddings(){
+
+
+
         ArrayList pubMedList = new ArrayList();
         ArrayList googleList = new ArrayList();
+        int counter = 0;
         for (String query : this.getQueryArray()) {
-            ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 25);
-            ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 25);
+            long startTime = System.currentTimeMillis();
+
+            ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 10);
+            long estimatedTime = System.currentTimeMillis() - startTime;
+            timeStats.put("pubmed"+counter, estimatedTime);
+            startTime = System.currentTimeMillis();
+            ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 10);
+            estimatedTime = System.currentTimeMillis() - startTime;
+            timeStats.put("google"+counter, estimatedTime);
             pubMedList.add(pubmedEmbeddings);
             googleList.add(googleEmbeddings);
+            counter++;
         }
 
         List<List<String>> googleCombinations = cartesian(googleList);
@@ -43,6 +59,10 @@ public class SearchObject {
 
         return listOfLists;
 
+    }
+
+    public HashMap getTimeStats(){
+        return this.timeStats;
     }
 
     public List<List<String>> getEmbeddingTermsA(){
@@ -62,10 +82,6 @@ public class SearchObject {
     }
 
 
-    public ArrayList<String> getSimilarTerms() {
-        System.out.println(this.similarTerms);
-        return this.similarTerms;
-    }
 
     public String getPreview(int docId, String path) throws InvalidTokenOffsetsException, IOException, ParseException {
         return this.searcher.getPreviewOfSingleQuery(docId, path, this.QUERY, 25);
@@ -150,7 +166,7 @@ public class SearchObject {
         return count;
     }
 
-    private List<List<String>> cartesian(List<List<String>> list) {
+    public List<List<String>> cartesian(List<List<String>> list) {
         long startTime = System.currentTimeMillis();
         List<List<String>> result = new ArrayList<List<String>>();
         int numSets = list.size();
@@ -159,15 +175,6 @@ public class SearchObject {
         cartesian(list, 0, tmpResult, result);
         long endTime = System.currentTimeMillis();
         Console.print("Building all combinations needed " + (endTime - startTime) + " ms", 0);
-        return result;
-    }
-
-
-    private String removeLastCharacter(String str) {
-        String result = null;
-        if ((str != null) && (str.length() > 0)) {
-            result = str.substring(0, str.length() - 1);
-        }
         return result;
     }
 
@@ -182,6 +189,15 @@ public class SearchObject {
             tmpResult[n] = i;
             cartesian(list, n + 1, tmpResult, result);
         }
+    }
+
+
+    private String removeLastCharacter(String str) {
+        String result = null;
+        if ((str != null) && (str.length() > 0)) {
+            result = str.substring(0, str.length() - 1);
+        }
+        return result;
     }
 
     private String removeStopWordManually(String input) {
