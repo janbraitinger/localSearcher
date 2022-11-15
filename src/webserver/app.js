@@ -41,7 +41,8 @@ var MAXSUGGESTS = 25
 var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
 
 
-var startPath = ""
+var startPath = "/"
+var cloudList;
 
 function confJsonData() {
     var obj = new Object();
@@ -54,7 +55,7 @@ function confJsonData() {
 
 
 
-let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
+//let getConf = generateJSONMessage(messageConstants.READ_CONF, "")
 
 
 
@@ -68,10 +69,11 @@ io.sockets.on('connection', (socket) => {
     sock.connect(connectAddress);
    
     //socket.broadcast.emit('', "")
-
+    sock.send(generateJSONMessage("getConf"));
 
     sock.on('message', function(data) {
         var messageObj = JSON.parse(data)
+  
         var messageBody = null
         try {
             messageBody = messageObj["body"]
@@ -90,10 +92,13 @@ io.sockets.on('connection', (socket) => {
 
         case messageConstants.CHANGE_CONF:
             socket.emit("stdout", messageBody)
+            cloudList = messageObj["subbody"]
             break
 
         case messageConstants.READ_CONF:
             startPath = messageBody
+            cloudList = messageObj["subbody"]
+            
             break
 
 
@@ -180,8 +185,6 @@ function generateJSONMessage(header, body = "", subBody = "") {
 
 
 
-var pingPong = 0;
-
 
 
 
@@ -214,7 +217,7 @@ function getTermsByString(searchInput, oldResults) {
     var tmp = []
     var i = 0
     for (let arr of holeArray) {
-        if (arr.toLowerCase().startsWith(searchInput.toLowerCase()) && i < 25) {
+        if (arr.toLowerCase().startsWith(searchInput.toLowerCase()) && i < MAXSUGGESTS) {
             tmp.push(oldResults + arr.toLocaleLowerCase())
             i++
         }
@@ -238,11 +241,6 @@ function logToConsole(message) {
 }
 
 
-var test = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/dumpData/DocumentD.txt"
-app.get("/test", (req, res) => {
-
-});
-
 
 var jsonParser = bodyParser.json()
 var urlencodedParser = bodyParser.urlencoded({
@@ -257,15 +255,15 @@ app.post("/getFile", urlencodedParser, (req, res) => {
 });
 
 
-function getFirstDirPath() {
-
-}
-
-
 
 app.get("/getIndex", urlencodedParser, (req, res) => {
+  
+    generateJSONMessage(messageConstants.READ_CONF, "")
     res.send(startPath)
 });
 
 
-getFirstDirPath()
+app.get("/getCloud", urlencodedParser, (req, res) => {
+    res.send(cloudList)
+});
+

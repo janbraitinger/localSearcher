@@ -1,3 +1,4 @@
+import com.beust.ah.A;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.StopAnalyzer;
@@ -8,18 +9,22 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.highlight.*;
+import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.json.JSONObject;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+import static java.util.Collections.reverseOrder;
+import static java.util.Comparator.comparing;
 
 
 public class Searcher {
@@ -29,14 +34,15 @@ public class Searcher {
     QueryParser queryParser;
     Query query;
     WordEmbedding google, pubmed;
+    ArrayList<JSONObject> wordCloudList = new ArrayList<>();
 
 
     public Searcher(String indexDirectoryPath) throws IOException, ParseException {
         setNewIndex(indexDirectoryPath);
-       google = new WordEmbedding();
-       google.loadModel(Path.EMBEDDINGS + "googleCorpus.bin");
-       pubmed = new WordEmbedding();
-        pubmed.loadModel(Path.EMBEDDINGS  + "pubmed.bin");
+        google = new WordEmbedding();
+        google.loadModel(Path.EMBEDDINGS + "googleCorpus.bin");
+        pubmed = new WordEmbedding();
+        pubmed.loadModel(Path.EMBEDDINGS + "pubmed.bin");
 
 
     }
@@ -83,11 +89,13 @@ public class Searcher {
 
         for (LeafReaderContext lrc : list) {
             Terms terms = lrc.reader().terms(LuceneConstants.CONTENTS);
+
             if (terms != null) {
                 TermsEnum termsEnum = terms.iterator();
                 BytesRef term;
                 while ((term = termsEnum.next()) != null) {
                     counter++;
+
                     fileWriter.write(term.utf8ToString() + ",");
                     fileWriter.flush();
                 }
@@ -95,6 +103,66 @@ public class Searcher {
         }
         Console.print("Wrote " + counter + " terms into autocomplete file", 0);
         fileWriter.close();
+        this.generateWordCloudList();
+    }
+
+
+    private void generateWordCloudList() throws IOException {
+
+        long startTime = System.currentTimeMillis();
+        ArrayList doubleList = new ArrayList();
+        final Fields fields = MultiFields.getFields(reader);
+        final Iterator<String> iterator = fields.iterator();
+        ArrayList<Tuple> bestMatches = new ArrayList();
+        long maxFreq = Long.MIN_VALUE;
+        String freqTerm = "";
+        while (iterator.hasNext()) {
+            final String field = iterator.next();
+            final Terms terms = MultiFields.getTerms(reader, field);
+            final TermsEnum it = terms.iterator();
+            BytesRef term = it.next();
+            while (term != null) {
+
+                final long freq = it.totalTermFreq();
+
+                if (term.utf8ToString().matches("[a-zA-Z]+") && term.utf8ToString().length() > 4) {
+                    bestMatches.add(new Tuple(term.utf8ToString(), (int) freq));
+                }
+                term = it.next();
+            }
+        }
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("1: " + (endTime - startTime));
+        Collections.sort(bestMatches, new Comparator<Tuple>() {
+            public int compare(Tuple o1, Tuple o2) {
+                return o1.getFreq() - o2.getFreq();
+            }
+        });
+
+        long endTime2 = System.currentTimeMillis();
+        System.out.println("2: " + (endTime2 - endTime));
+        ArrayList result = new ArrayList();
+        if (bestMatches.size() > 51) {
+            for (int i = bestMatches.size() - 50; i < bestMatches.size() - 1; i++) {
+                if (!doubleList.contains(bestMatches.get(i).term)) {
+                    doubleList.add(bestMatches.get(i).term);
+                    JSONObject messageObj = new JSONObject();
+                    messageObj.put("word", bestMatches.get(i).term);
+                    messageObj.put("weight", bestMatches.get(i).freq);
+                    result.add(messageObj);
+                    System.out.println(bestMatches.get(i).term + " -> " + bestMatches.get(i).freq);
+                }
+            }
+        } else {
+            this.wordCloudList.add(null);
+            return;
+        }
+
+
+        this.wordCloudList = result;
+
+
     }
 
 
@@ -128,11 +196,12 @@ public class Searcher {
         String highlight;
         try {
             highlight = highlighter.getBestFragments(stream, text, 50)[0];
-        }catch(Exception e){
+        } catch (Exception e) {
             highlight = "No preview available";
         }
         return highlight;
     }
+
     public Integer calcIndexDistance(int docId, String[] query) throws IOException {
         ArrayList indexe = new ArrayList();
         List<List<Integer>> lst = new ArrayList<List<Integer>>();
@@ -143,15 +212,12 @@ public class Searcher {
             ArrayList tmpIndexes = getIndexPositionOfTerm(docId, query[i]);
             //System.out.println(query[i]);
             //System.out.println(tmpIndexes.size());
-            if(tmpIndexes.size() == 0){
+            if (tmpIndexes.size() == 0) {
                 return 1;
             }
 
             lst.add(tmpIndexes);
         }
-
-
-
 
 
         List<List<Integer>> result = cartesian(lst);
@@ -177,7 +243,6 @@ public class Searcher {
         Collections.sort(counterList);
 
 
-
         return counterList.get(0);
 
     }
@@ -190,7 +255,7 @@ public class Searcher {
         return result;
     }
 
-    public void cartesian(List<List<Integer>> list, int n,Integer[] tmpResult, List<List<Integer>> result) {
+    public void cartesian(List<List<Integer>> list, int n, Integer[] tmpResult, List<List<Integer>> result) {
         if (n == list.size()) {
             result.add(new ArrayList<Integer>(Arrays.asList(tmpResult)));
             return;

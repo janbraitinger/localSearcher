@@ -38,6 +38,10 @@ public class Main {
             this.generateSearcherObj();
             this.searcher.writeIndexTerms(autoCompletePath);
             this.startSocketThread();
+
+
+
+
         } catch (Exception e) {
             Console.print(e.toString(), 2);
         }
@@ -79,7 +83,7 @@ public class Main {
                        // System.out.println(subBody);
                         Console.print("Searching for query '" + query + "'", 0);
                         ArrayList<JSONObject> resultList = search(query);
-                        messageString = buildMessageString(SocketMessages.SEND_DOCUMENT_LIST, resultList.toString());
+                        messageString = buildMessageString(SocketMessages.SEND_DOCUMENT_LIST, resultList.toString(), null);
                         socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                         break;
 
@@ -97,7 +101,7 @@ public class Main {
                                 String result = this.createIndex();
                                 this.searcher.setNewIndex(indexDir);
                                 this.searcher.writeIndexTerms(autoCompletePath);
-                                messageString = buildMessageString(SocketMessages.CHANGE_CONF, result);
+                                messageString = buildMessageString(SocketMessages.CHANGE_CONF, result, this.searcher.wordCloudList);
                                 socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                                 break;
                             }
@@ -111,12 +115,13 @@ public class Main {
                         Console.print("Reading data from conf file", 0);
                         String confResult = getConf();
 
-                        messageString = buildMessageString(SocketMessages.READ_CONF, confResult);
+
+                        messageString = buildMessageString(SocketMessages.READ_CONF, confResult, this.searcher.wordCloudList);
                         socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                         break;
 
                     case SocketMessages.GET_STATUS:
-                        messageString = buildMessageString(SocketMessages.GET_STATUS, "pong");
+                        messageString = buildMessageString(SocketMessages.GET_STATUS, "pong", null);
                         socket.send(messageString.getBytes(ZMQ.CHARSET), 0);
                         break;
 
@@ -135,10 +140,11 @@ public class Main {
 
 
 
-    private String buildMessageString(String header, String body) {
+    private String buildMessageString(String header, String body, Object subbody) {
         JSONObject messageObj = new JSONObject();
         messageObj.put("header", header);
         messageObj.put("body", body);
+        messageObj.put("subbody", subbody);
         return messageObj.toString();
     }
 

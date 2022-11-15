@@ -281,6 +281,8 @@ function selectMatching(operator) {
 }
 
 
+
+
 getSection.filterButton.click(() => {
   var filterArea = getSection.filterSection
   if (filterArea.is(":hidden")) {
@@ -359,6 +361,20 @@ function fillWeightCanvers(weight) {
   }
   //}
 }
+
+
+
+
+$("#statsButton").click(function(e) {
+  $('#statsModal').modal('show');
+
+
+
+
+});
+
+
+
 
 
 
@@ -520,6 +536,7 @@ function getFirstIndex() {
 
 
 
+
 var minDate, maxDate;
 
 // Custom filtering function which will search data in column four between two values
@@ -558,3 +575,5 @@ $(document).ready(function() {
       console.log("drwaew")
   });
 });
+
+

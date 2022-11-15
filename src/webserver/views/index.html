@@ -14,14 +14,15 @@
       <script src="https://cdn.datatables.net/datetime/1.1.2/js/dataTables.dateTime.min.js"></script>
       <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>      
       <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+      <script src="wordCloud.js" defer type="module"></script>
       <script src="handler.js" defer type="module"></script>
 
       <title>search for something</title>
    </head>
    <body>
 
-
-
+      <div id="word-cloud"></div>
+         <div id="ttt"></div>
       <div class="loader"></div>
       <header class="sticky">
          <div class="d-flex justify-content-between">
@@ -32,10 +33,10 @@
             </div>
             <div>
                
-               <a href="#" data-toggle="modal" id="pathSettings" data-target="#settingsModal" class="btnMenue"><img src="/img/settings.png" width="20"onclick=""></a>
+               <a href="#" data-toggle="modal" id="pathSettings" data-target="#settingsModal" class="btnMenue"><img src="/img/settings.png" width="20"></a>
               
                   <a href="#" id="filterButton" class="btnMenue"><img src="/img/filter.png" width="20"></a>
-                  <a href="#" id="statsButton" class="btnMenue"><img src="/img/stats.png" width="20"></a>
+                  <a href="#" data-toggle="modal" id="statsButton" ata-target="#statsModal" class="btnMenue"><img src="/img/stats.png" width="20"></a>
               
             </div>
           
@@ -199,7 +200,19 @@
                </div>
             </div>
          </div>
-      </main>
+
+         <div class="modal fade" id="statsModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" style="width: 1000px;" role="document">
+               <!-- Modal content-->
+               <div class="modal-content" style="background-color:#253C59; margin: auto;">
+                 
+               </div>
+            </div>
+         </div>
+
+
+
+
       <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" >
       <div class="modal-dialog modal-lg" style="width: 1000px;" role="document">
          <div class="modal-content">
@@ -222,5 +235,6 @@
             </div>
          </div>
       </div>
+   </main>
    </body>
 </html>
