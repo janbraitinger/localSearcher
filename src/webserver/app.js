@@ -98,6 +98,7 @@ io.sockets.on('connection', (socket) => {
         case messageConstants.READ_CONF:
             startPath = messageBody
             cloudList = messageObj["subbody"]
+            socket.emit("abc", cloudList)
             
             break
 

@@ -6,7 +6,7 @@
 header{
     border:1px;
     height: 50px;
-    background-color: #253C59;
+    background-color: #00556f;
     color:white;
     text-align: right;
     line-height: 20px;
@@ -186,15 +186,26 @@ main{
 
 
   .btnMenue{
-    padding:7px;
-    background-color: ghostwhite;
-    color: lightgray;
-    text-decoration: none;
-    border-radius: 5px;
+
+
+    display: inline-block;
+    justify-content: center;
+    margin-top: -16px;
+    padding: 14px;
+    
+
+
+}
+
+.btnMenue img {
+
+    align-self: flex-start; 
 }
 
 .btnMenue:hover{
-    background-color: rgb(214, 140, 151);
+
+
+    background-color: #0078a5;
     color:white;
 
 }
@@ -207,9 +218,6 @@ main{
     margin-top: -3px;
 }
 
-.btnMenue img:hover{
-transform: scale(1.1);
-}
 
 
 
@@ -325,6 +333,7 @@ div.jqcloud {
     line-height: normal;
     margin-top: 40px !important;
     margin-bottom: -100px !important;
+    color:#253C59;
 
     
 }
@@ -332,12 +341,20 @@ div.jqcloud {
 div.jqcloud a {
     font-size: inherit;
     text-decoration: none;
+
 }
+
+
 
 div.jqcloud span:hover{
     cursor: pointer;
+
    transform: scale(1.2);
+    background-color: #fff;
+    border-radius: 10px;
+ 
    transition-duration: 120ms;
+
 }
 
 
@@ -369,3 +386,14 @@ div.jqcloud {
 div.jqcloud span {
     padding: 0;
 }
+
+.dot {
+    height: 25px;
+    width: 25px;
+
+    border: 2px solid white;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+ 

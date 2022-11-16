@@ -109,7 +109,7 @@ public class Searcher {
 
     private void generateWordCloudList() throws IOException {
 
-        long startTime = System.currentTimeMillis();
+
         ArrayList doubleList = new ArrayList();
         final Fields fields = MultiFields.getFields(reader);
         final Iterator<String> iterator = fields.iterator();
@@ -132,26 +132,24 @@ public class Searcher {
             }
         }
 
-        long endTime = System.currentTimeMillis();
-        System.out.println("1: " + (endTime - startTime));
+
+
         Collections.sort(bestMatches, new Comparator<Tuple>() {
             public int compare(Tuple o1, Tuple o2) {
                 return o1.getFreq() - o2.getFreq();
             }
         });
 
-        long endTime2 = System.currentTimeMillis();
-        System.out.println("2: " + (endTime2 - endTime));
+
         ArrayList result = new ArrayList();
-        if (bestMatches.size() > 51) {
-            for (int i = bestMatches.size() - 50; i < bestMatches.size() - 1; i++) {
+        if (bestMatches.size() > 81) {
+            for (int i = bestMatches.size() - 80; i < bestMatches.size() - 1; i++) {
                 if (!doubleList.contains(bestMatches.get(i).term)) {
                     doubleList.add(bestMatches.get(i).term);
                     JSONObject messageObj = new JSONObject();
                     messageObj.put("word", bestMatches.get(i).term);
                     messageObj.put("weight", bestMatches.get(i).freq);
                     result.add(messageObj);
-                    System.out.println(bestMatches.get(i).term + " -> " + bestMatches.get(i).freq);
                 }
             }
         } else {

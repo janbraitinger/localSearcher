@@ -21,28 +21,32 @@
    </head>
    <body>
 
-      <div id="word-cloud"></div>
+      <div id="word-cloud">please refresh</div>
          <div id="ttt"></div>
       <div class="loader"></div>
       <header class="sticky">
          <div class="d-flex justify-content-between">
             <div>
-               <span class="badge badge-warning" id="waitingStatus">server status unknown</span>
-               <span class="badge badge-success" id="connectedStatus">server available</span>
-               <span class="badge badge-danger" id="disconnectedStatus">server unavailable</span>
+               <span class="dot" style="background-color: orange" id="serverUnknown"></span>
+               <span class="dot" style="background-color: red" id="serverOff"></span>
+               <span class="dot" style="background-color: greenyellow" id="serverOn"></span>
+    
             </div>
             <div>
                
                <a href="#" data-toggle="modal" id="pathSettings" data-target="#settingsModal" class="btnMenue"><img src="/img/settings.png" width="20"></a>
               
                   <a href="#" id="filterButton" class="btnMenue"><img src="/img/filter.png" width="20"></a>
-                  <a href="#" data-toggle="modal" id="statsButton" ata-target="#statsModal" class="btnMenue"><img src="/img/stats.png" width="20"></a>
+               <!--  <a href="#" data-toggle="modal" id="statsButton" ata-target="#statsModal" class="btnMenue"><img src="/img/stats.png" width="20"></a>-->
               
             </div>
           
          </div>
       </header>
       <main>
+
+
+
          <span id="errormsg"></span>
          <div id="content">
          <form autocomplete="off">
@@ -53,6 +57,7 @@
                </div>
                <div id="predictions"></div>
             </div>
+        
             <p id="statistics" style="text-align:center;"></p>
             <div id=""container>
                <ul id="list"></ul>

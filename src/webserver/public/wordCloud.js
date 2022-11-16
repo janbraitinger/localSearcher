@@ -1,7 +1,6 @@
 
 
 
-
 /*!
 * jQCloud Plugin for jQuery
 *
@@ -12,6 +11,7 @@
 *
 * Date: 2013-05-09 18:54:22 +0200
 */
+
 
 
 
@@ -305,45 +305,26 @@ Object.keys(dumpObj).forEach(function(key) {
 
 var word_arrays = []
 
-function getCloud() {
+const socket = io.connect('http://localhost:3000');
+socket.on("abc", (data) => {
+ word_arrays = []
+  var obj = JSON.stringify(data)
+  var nobj = JSON.parse(obj)
 
 
-
-
-
-  $.ajax({
-      url: "/getCloud",
-      type: "GET",
-      success: function(response, status, xhr) {
-        var obj = JSON.stringify(response)
-        var nobj = JSON.parse(obj)
-
-   
-        
-       
-
-      Object.keys(nobj).forEach(function(key) {
-
-        word_arrays.push({
-          text: nobj[key]["word"],
-          weight: parseInt(nobj[key]["weight"])
-        });
   
-      });
+ 
 
-    
-      },
-      error: function(xhr, ajaxOptions, thrownError) {
-          //alert(xhr.status);
-          //alert(thrownError);
-      }
+Object.keys(nobj).forEach(function(key) {
 
+  word_arrays.push({
+    text: nobj[key]["word"],
+    weight: parseInt(nobj[key]["weight"])
   });
-}
 
-getCloud()
+});
 
-
+$("#word-cloud").html("");
 
 $("#word-cloud").jQCloud(word_arrays, {
   width: 500,
@@ -357,3 +338,9 @@ $("#word-cloud").jQCloud(word_arrays, {
       });
   }
 });
+
+})
+
+
+
+

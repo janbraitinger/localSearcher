@@ -9,7 +9,7 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
-  "pageLength": 20,
+  "pageLength": 10,
 
   pagingType: 'full_numbers',
   searching: true,
@@ -57,6 +57,7 @@ const dataTable = $('#aexample').DataTable({
 const index = ""
 const getSection = new Object();
 const socket = io.connect('http://localhost:3000');
+
 getSection.searchButton = $(Section.searchButton)
 getSection.errorMessage = $(Section.errorMessage)
 getSection.searchInputField = $(Section.searchInputField)
@@ -85,6 +86,8 @@ if (isIOS) {
 /* receiving messages from node.js backend */
 socket.on('connect', () => {
   logToConsole("connect");
+
+
 });
 
 socket.on("disconnect", (reason) => {
@@ -92,6 +95,7 @@ socket.on("disconnect", (reason) => {
       logToConsole("trying to reconnect")
       socket.connect();
   }
+  $("#waitingStatus").text("error")
   logToConsole("connection lost")
 });
 
@@ -219,6 +223,7 @@ socket.on(RpcGetCall.RESULTLIST, (data) => {
 socket.on(RpcGetCall.CONF, (confData) => {
   let newPath = JSON.parse(confData).path
   getSection.dirPath.val(newPath);
+
 })
 
 
