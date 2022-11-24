@@ -1,3 +1,4 @@
+
 import {
   Section,
   RpcGetCall,
@@ -113,18 +114,35 @@ socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
 
   removeElements()
   if (dataArray != null) {
+   
+    $("#searchQueryInputField").hover(function () {
+      $(this).css("box-shadow", "none", "important");
+  }, function () {
+    $(this).css("box-shadow", "none", "important");
+  });
+       
+
+
+
       $("#list").show()
       for (let i of dataArray) {
 
           let word = "<b>" + i.substring(0, getSection.searchInputField.val().length) + "</b>"
           word += i.substring(getSection.searchInputField.val().length)
-          $("#list").append("<li class='list-items'>" + word + "</li>");
+          $("#list").append("<li class='list-items'> <img class='searchBulletImg' src='/img/searchicon.png'>" + word + "</li>");
 
 
       }
 
   }
 });
+
+
+
+
+$('#settingsModal').on('hidden.bs.modal', function () {
+  location.reload();
+})
 
 
 window.onbeforeunload = function() {
@@ -413,13 +431,16 @@ function showResultList(jsonPara) {
     alert("server is indexing atm")
     return
   }
+
+
+
   getSection.searchResults.hide()
   getSection.searchResults.html("")
   const matching = [Constant.DIRECT_MATCHING, Constant.GOOGLE_EMBEDDING, Constant.PUPMED_EMBEDDING]
   var matchingId = 0
   var objCount = 0
   for (let itemCollection of jsonPara) {
-
+   
       if (itemCollection["time"] || itemCollection["stats"]) {
 
           getSection.docCounter.show()
@@ -458,6 +479,7 @@ $(".checkbox-menu").on("change", "input[type='checkbox']", function() {
 $(document).on('click', '.allow-focus', function(e) {
   e.stopPropagation();
 });
+
 
 
 
@@ -525,6 +547,7 @@ function removeElements() {
   items.forEach((item) => {
       item.remove()
   })
+ // $("#searchQueryInputField").css("cssText", "border: gainsboro solid 1px !important");
 }
 
 
@@ -584,3 +607,4 @@ $(document).ready(function() {
       console.log("drwaew")
   });
 });
+

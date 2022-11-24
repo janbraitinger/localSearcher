@@ -5,9 +5,9 @@ import org.json.JSONObject;
 public class Message {
 
     private String header;
-    private String body;
+    private Object body;
 
-    public Message(String header, String body){
+    public Message(String header, Object body){
         this.header= header;
         this.body = body;
     }

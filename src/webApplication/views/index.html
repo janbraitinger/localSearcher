@@ -6,58 +6,70 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
       <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+      <link rel="stylesheet" href="https://cdn.datatables.net/datetime/1.2.0/css/dataTables.dateTime.min.css">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
       <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
       <script src="https://cdn.datatables.net/datetime/1.1.2/js/dataTables.dateTime.min.js"></script>
+      >
       <script src="https://cdn.socket.io/4.5.3/socket.io.min.js" integrity="sha384-WPFUvHkB1aHA5TDSZi6xtDgkF0wXJcIIxXhC6h8OT8EH3fC5PWro5pWJ1THjcfEi" crossorigin="anonymous"></script>      <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
       <script>
          const socket = io.connect('http://localhost:3000');
-         </script>
+      </script>
       <script src="wordCloud.js" defer type="module"></script>
       <script src="handler.js" defer type="module"></script>
-
       <title>search for something</title>
    </head>
    <body>
-
       <div id="word-cloud">please refresh</div>
-         <div id="ttt"></div>
+      <div id="ttt"></div>
       <div class="loader"></div>
       <header class="sticky">
          <div class="d-flex justify-content-between">
             <div>
                <span class="dot" style="background-color: orange" id="serverStatus"></span>
-    
             </div>
             <div>
-               
                <a href="#" data-toggle="modal" id="pathSettings" data-target="#settingsModal" class="btnMenue"><img src="/img/settings.png" width="20"></a>
-              
-                  <a href="#" id="filterButton" class="btnMenue"><img src="/img/filter.png" width="20"></a>
+               <a href="#" id="filterButton" class="btnMenue"><img src="/img/filter.png" width="20"></a>
                <!--  <a href="#" data-toggle="modal" id="statsButton" ata-target="#statsModal" class="btnMenue"><img src="/img/stats.png" width="20"></a>-->
-              
             </div>
-          
          </div>
       </header>
       <main>
-
-
-
          <span id="errormsg"></span>
          <div id="content">
          <form autocomplete="off">
-            <div class="input-group mb-3" style="height:55px;">
+            <div class="input-group-append" style="height:55px;">
+               <div class="input-group-prepend">
+                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="embeddingDropDown">Corpus</button>
+                  <div class="dropdown-menu">
+                     <span class="dropdown-item" href="#">
+                        <div class="form-check">
+                           <input class="form-check-input" checked type="checkbox" value="" id="flexCheckDefault" id="checkboxGoogle">
+                           <label class="form-check-label" for="flexCheckDefault">
+                           Google
+                           </label>
+                        </div>
+                     </span>
+                     <span class="dropdown-item" href="#">
+                        <div class="form-check">
+                           <input class="form-check-input" checked type="checkbox" value="" id="flexCheckDefault" id="checkboxPubMed">
+                           <label class="form-check-label" for="flexCheckDefault">
+                           PubMed
+                           </label>
+                        </div>
+                     </span>
+                  </div>
+               </div>
                <input type="text" class="form-control" placeholder="search query" aria-label="searchquery" id="searchQueryInputField" aria-describedby="basic-addon2">
                <div class="input-group-append">
-                  <button class="btn btn-secondary" id="searchBtn" type="button">find documents</button>
+                  <button class="btn btn-outline-secondary" id="searchBtn" type="button" style="border-radius: 0 10px 10px 0px;">find documents</button>
                </div>
                <div id="predictions"></div>
             </div>
-        
             <p id="statistics" style="text-align:center;"></p>
             <div id=""container>
                <ul id="list"></ul>
@@ -84,7 +96,6 @@
                      </div>
                   </div>
                </div>
-           
             </div>
          </div>
          <div id="filterArea" style="display:none;">
@@ -113,52 +124,22 @@
                      </div>
                   </div>
                   <div class="col-sm">
-                     <form>
-                        <div class="form-group">
-                           <label for="formControlRange">amount similar words</label>
-                           <input type="range" class="form-control-range" id="formControlRange" onInput="$('#rangeval').html($(this).val())">
-                           <span id="rangeval">
-                              50<!-- Default value -->
-                           </span>
-                        </div>
-                     </form>
+               
                   </div>
                   <table border="0" cellspacing="5" cellpadding="5">
                      <tbody>
                         <tr>
                            <td>Minimum date:</td>
                            <td><input type="text" id="min" name="min"></td>
-                        </tr>
-                        <tr>
+                       
                            <td>Maximum date:</td>
                            <td><input type="text" id="max" name="max"></td>
                         </tr>
                      </tbody>
                   </table>
-                  <div class="col-sm">
-                     <div class="dropdown">
-                        <button class="btn btn-default dropdown-toggle" type="button" 
-                           id="dropdownMenu1" data-toggle="dropdown" 
-                           aria-haspopup="true" aria-expanded="true">
-                        <i class="glyphicon glyphicon-cog"></i>
-                        select embeddings
-                        </button>
-                        <ul class="dropdown-menu checkbox-menu allow-focus" aria-labelledby="dropdownMenu1">
-                        <li >
-                           <label>
-                           <input type="checkbox" id="googleBox" checked> Google Corpus
-                           </label>
-                        </li>
-                        <li >
-                           <label>
-                           <input type="checkbox" id="pubmedBox"> Pubmed Corpus
-                           </label>
-                        </li>
-                     </div>
-                  </div>
+                  
                </div>
             </div>
-
          </div>
          <ul id="results" class="list-group">
          </ul>
@@ -205,41 +186,35 @@
                </div>
             </div>
          </div>
-
          <div class="modal fade" id="statsModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" style="width: 1000px;" role="document">
                <!-- Modal content-->
                <div class="modal-content" style="background-color:#253C59; margin: auto;">
-                 
                </div>
             </div>
          </div>
-
-
-
-
-      <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" >
-      <div class="modal-dialog modal-lg" style="width: 1000px;" role="document">
-         <div class="modal-content">
-            <div class="modal-header">
-               <h5 class="modal-title-settings" id="exampleModalLabel">Settings</h5>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-               <span aria-hidden="true">&times;</span>
-               </button>
-            </div>
-            <div class="modal-body-settings" style="padding:15px;">
-               <form>
-                  <div class="form-group">
-                     <label for="recipient-name" class="col-form-label">IndexPath:</label>
-                     <input type="text" class="form-control" id="indexpath"  placeholder="/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Experimente/05052022_lucene_test/documents/alt/">
-                     <button type="button" class="btn btn-dark" style="margin-top:10px; float:right;"id="changeIndexBtn">change index</button>
-                  </div>
-               </form>
-               <span id="servermsg"></span>
-               <p id="folderContent"></p>
+         <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" >
+         <div class="modal-dialog modal-lg" style="width: 1000px;" role="document">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h5 class="modal-title-settings" id="exampleModalLabel">Settings</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                  </button>
+               </div>
+               <div class="modal-body-settings" style="padding:15px;">
+                  <form>
+                     <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">IndexPath:</label>
+                        <input type="text" class="form-control" id="indexpath"  placeholder="/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Experimente/05052022_lucene_test/documents/alt/">
+                        <button type="button" class="btn btn-dark" style="margin-top:10px; float:right;"id="changeIndexBtn">change index</button>
+                     </div>
+                  </form>
+                  <span id="servermsg"></span>
+                  <p id="folderContent"></p>
+               </div>
             </div>
          </div>
-      </div>
-   </main>
+      </main>
    </body>
 </html>

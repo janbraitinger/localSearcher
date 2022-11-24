@@ -10,6 +10,9 @@ const {
     reIndex
 } = require('../controllers/restGateway');
 
+var wordCloudData = "";
+var confData = "/";
+var luceneStatusFlag = false;
 
 module.exports = (io) => {
     io.on('connection', socket => {
@@ -23,23 +26,31 @@ module.exports = (io) => {
             socket.emit("docResultList", searchResult)
         });
 
+        socket.on('getCloud', async (searchQuery) => {
+            let wordCloudData = await wordCloud();
+            socket.broadcast.emit("wordcloud", wordCloudData)
+        });
+
         socket.on("reIndex", async (data) => {
             let stdout = await reIndex(data)
-            console.log(stdout)
             if(stdout != "error"){
                 let wordCloudData = await wordCloud();
                 let confData = await getConfData();
-                socket.emit("stdout", stdout)
                 socket.broadcast.emit("wordcloud", wordCloudData)
+                console.log("reindex")
                 socket.broadcast.emit("getconf", confData)
                 readAutocompleteFile()
+                socket.emit("stdout", "indexing done in " + stdout.body)
             }
 
         });
 
         (async function() {
-            let wordCloudData = await wordCloud();
-            let confData = await getConfData();
+            if(luceneStatusFlag){
+                wordCloudData = await wordCloud();
+                confData = await getConfData();
+            }
+
             socket.emit("wordcloud", wordCloudData)
             socket.emit("getconf", confData)
         })();
@@ -54,6 +65,11 @@ module.exports = (io) => {
     setInterval(async () => {
         let luceneStatus = await statusCheck()
         body = luceneStatus.body
+        if(body == "online"){
+            luceneStatusFlag = true
+        }else{
+            luceneStatusFlag = false
+        }
         io.emit("luceneStatus", body);
     }, 2000);
 

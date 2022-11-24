@@ -15,6 +15,8 @@
 
 
 
+
+
 (function($) {
   "use strict";
   $.fn.jQCloud = function(word_array, options) {
@@ -256,53 +258,6 @@
   };
 })(jQuery);
 
-/*
-var dump = {
-  "cloudTag": {
-    "different" : 3646,
-"university" : 3652,
-"number" :3718,
-"compared" : 3749,
-"medical" : 3808,
-"reported": 3833,
-"however" : 4013,
-"levels" : 4246,
-"patient": 4394,
-"based": 4456,
-"associated" : 4519,
-"table" : 4594,
-"protein" : 4595,
-"research" : 4626,
-"expression" : 4910,
-"control" : 5016,
-"studies" : 5526,
-"clinical" : 5558,
-"group" : 5860,
-      "results": 5951,
-      "disease": 5957,
-      "figure": 5958,
-      "health": 6050,
-      "analysis": 6714,
-      "cancer": 6834,
-      "treatment": 7169,
-      "using": 8213,
-      "study": 12353,
-      "cells": 13335
-  }
-};
-
-var dumpObj = dump.cloudTag;
-var word_arrays = []
-
-Object.keys(dumpObj).forEach(function(key) {
-	word_arrays.push({
-		text: key,
-		weight: parseInt(dumpObj[key])
-	});
-});
-
-*/
-
 var word_arrays = []
 
 
@@ -311,6 +266,11 @@ var word_arrays = []
 
 socket.on("wordcloud", (data) => {
 
+
+    buildCloud(data)
+});
+
+function buildCloud(data){
  word_arrays = []
  var nobj
   var obj = JSON.stringify(data)
@@ -319,10 +279,7 @@ nobj = JSON.parse(obj)
 nobj = nobj.body
 
 
-}
-catch{
-return
-}
+
 
 
   
@@ -351,8 +308,16 @@ $("#word-cloud").jQCloud(word_arrays, {
       });
   }
 });
+}catch{
+    socket.emit("getCloud")
+    }
+    
 
-})
+    if(Object.keys(data).length == 0){
+        $("#word-cloud").html("please refresh page");
+    }
+
+}
 
 
 
