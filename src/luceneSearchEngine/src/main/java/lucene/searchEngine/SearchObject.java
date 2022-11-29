@@ -21,51 +21,67 @@ public class SearchObject {
         this.IS_MULTIPLE = isMultipleQuery(query);
         this.QUERY = this.removeStopWordManually(query);
         this.searcher = searcher;
-    }
 
-    public void activateEmbeddings() {
-        this.useEmbeddings = true;
     }
 
 
-    public List<List<List<String>>> getEmbeddings(){
+    public void checkEmbedding(String embedding) {
+        if (embedding.length() > 2) {
+            this.useEmbeddings = true;
+        }
+    }
 
 
+    public List<List<List<String>>> getEmbeddings(String embeddingTypes) {
+        // todo: dont code the embedding selection hard
 
         ArrayList pubMedList = new ArrayList();
         ArrayList googleList = new ArrayList();
         int counter = 0;
+        System.out.println(embeddingTypes);
         for (String query : this.getQueryArray()) {
-            long startTime = System.currentTimeMillis();
 
-            ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 10);
-            long estimatedTime = System.currentTimeMillis() - startTime;
-            timeStats.put("pubmed"+counter, estimatedTime);
-            startTime = System.currentTimeMillis();
-            ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 10);
-            estimatedTime = System.currentTimeMillis() - startTime;
-            timeStats.put("google"+counter, estimatedTime);
-            pubMedList.add(pubmedEmbeddings);
-            googleList.add(googleEmbeddings);
+
+            if (embeddingTypes.contains("pubmed")) {
+                long startTime = System.currentTimeMillis();
+                ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 10);
+                long estimatedTime = System.currentTimeMillis() - startTime;
+                timeStats.put("pubmed" + counter, estimatedTime);
+                pubMedList.add(pubmedEmbeddings);
+            }
+
+            if (embeddingTypes.contains("google")) {
+                long startTime = System.currentTimeMillis();
+                ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 10);
+                long estimatedTime = System.currentTimeMillis() - startTime;
+                timeStats.put("google" + counter, estimatedTime);
+                googleList.add(googleEmbeddings);
+            }
+
+
             counter++;
         }
 
-        List<List<String>> googleCombinations = cartesian(googleList);
-        List<List<String>> pubmedCombinations = cartesian(pubMedList);
         List<List<List<String>>> listOfLists = new ArrayList<>();
+        if (embeddingTypes.contains("google")) {
+            List<List<String>> googleCombinations = cartesian(googleList);
+            listOfLists.add(googleCombinations);
+        }
+        if (embeddingTypes.contains("pubmed")) {
+            List<List<String>> pubmedCombinations = cartesian(pubMedList);
+            listOfLists.add(pubmedCombinations);
+        }
 
-        listOfLists.add(pubmedCombinations);
-        listOfLists.add(googleCombinations);
 
         return listOfLists;
 
     }
 
-    public HashMap getTimeStats(){
+    public HashMap getTimeStats() {
         return this.timeStats;
     }
 
-    public List<List<String>> getEmbeddingTermsA(){
+    public List<List<String>> getEmbeddingTermsA() {
         ArrayList listOfSimilarLists = new ArrayList();
 
 
@@ -82,35 +98,34 @@ public class SearchObject {
     }
 
 
-
     public String getPreview(int docId, String path) throws InvalidTokenOffsetsException, IOException, ParseException {
         return this.searcher.getPreviewOfSingleQuery(docId, path, this.QUERY, 25);
 
     }
 
     public double getSimilarityTo(String embedding, int embeddingType) {
-        if(this.IS_MULTIPLE){
+        if (this.IS_MULTIPLE) {
             String[] tmp = embedding.split("\\W+");
             int i = 0;
             float sumSimilarity = 0;
-            for(String term : tmp){
-                if(embeddingType == 1){
+            for (String term : tmp) {
+                if (embeddingType == 1) {
                     sumSimilarity += this.searcher.pubmed.getSimilarity(term, this.getQueryArray()[i]);
                 }
-                if(embeddingType == 2){
+                if (embeddingType == 2) {
                     sumSimilarity += this.searcher.google.getSimilarity(term, this.getQueryArray()[i]);
                 }
 
                 i++;
             }
-            return sumSimilarity/tmp.length;
+            return sumSimilarity / tmp.length;
         }
         embedding = this.removeLastCharacter(embedding);
 
-        if(embeddingType == 1){
+        if (embeddingType == 1) {
             return this.searcher.pubmed.getSimilarity(this.QUERY, embedding);
         }
-        if(embeddingType == 2){
+        if (embeddingType == 2) {
             return this.searcher.google.getSimilarity(this.QUERY, embedding);
         }
 
@@ -205,8 +220,8 @@ public class SearchObject {
         HashSet<String> wordWithStopWord = new HashSet<String>(Arrays.asList(words));
         HashSet<String> StopWordsSet = new HashSet<>(Arrays.asList(StopWords.stopWordArray));
         wordWithStopWord.removeAll(StopWordsSet);
-        String query  = "";
-        for(String word : wordWithStopWord){
+        String query = "";
+        for (String word : wordWithStopWord) {
             query += word + " ";
         }
         query = this.removeLastCharacter(query);

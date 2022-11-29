@@ -14,9 +14,10 @@ module.exports.statusCheck = async () => {
 
 
 module.exports.search = async (query) => {
-    query = query.replace(/ /g, "&");
-    let searchMsg = buildJSON("search", query)
-    return axios.get(LUCENE_ENDPOINT_URL + "search/" + searchMsg)
+    let tmpClientOb = JSON.parse(query)
+    //tmpClientOb.query = query.replace(/ /g, "&");
+    let searchMsg = buildJSON("search", JSON.stringify(tmpClientOb))
+    return axios.get(LUCENE_ENDPOINT_URL + "search/" + JSON.stringify(tmpClientOb))
         .then(response => response.data)
         .catch(() => {
             return buildJSON("result", "error")

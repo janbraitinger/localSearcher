@@ -1,12 +1,12 @@
 const fs = require('fs');
 const MAXSUGGESTS = 25
-var holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
+var holeArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
 
 
 
 
 module.exports.readAutocompleteFile = () => {
-    holeArray = fs.readFileSync("indexData.txt", "utf-8").toString().split(",");
+    holeArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
 }
 
 

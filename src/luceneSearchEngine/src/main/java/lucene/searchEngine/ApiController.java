@@ -7,7 +7,7 @@ public class ApiController {
     private int port = 4001;
     private Javalin endPoint;
     private Application app;
-    volatile boolean semaphore;
+    volatile boolean semaphore = false;
 
     public ApiController(int port, Application app) {
         Console.print("API runs on Port " + this.port, 0);
@@ -26,7 +26,8 @@ public class ApiController {
 
 
         this.endPoint.get("/search/{data}", handler -> {
-            if (!semaphore) {
+            System.out.println(this.semaphore);
+            if (!this.semaphore) {
                 new Controller(handler).search(app.getSearcher());
                 return;
             }
@@ -44,10 +45,12 @@ public class ApiController {
 
 
         this.endPoint.get("/setConf/{data}", handler -> {
-            if (!semaphore) {
-                semaphore = true;
+            if (!this.semaphore) {
+                this.semaphore = true;
+                System.out.println("was nun");
                 new Controller(handler).setConf(app.getConfManager(), app.getSearcher(), app);
-                semaphore = false;
+                System.out.println("done with setting up new path");
+                this.semaphore = false;
                 return;
             }
             handler.result("semaphore error");

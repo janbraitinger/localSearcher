@@ -72,10 +72,14 @@ main{
 }
 
 #searchQueryInputField:hover{
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px !important;
 
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px !important;
+    z-index: 200 !important;
 }
 
+#searchQueryInputField:placeholder-shown{
+    box-shadow:none !important;
+}
 
 
 #checkBoxes{
@@ -160,7 +164,7 @@ main{
     margin-right: 150px;
     overflow:auto;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
-    z-index: 99;
+    z-index: 99 !important;
 
     
 }
@@ -186,7 +190,7 @@ main{
 
 
 .list-items{
-    z-index: 100;
+    z-index: 100 !important;
     padding: 12px 5px;
     cursor: pointer;
     list-style-image: url("http://upload.wikimedia.org/wikipedia/commons/1/19/Icons-mini-icon_attachment.gif");

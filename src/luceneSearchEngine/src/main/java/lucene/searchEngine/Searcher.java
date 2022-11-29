@@ -49,6 +49,7 @@ public class Searcher {
 
     public void setNewIndex(String indexDirectoryPath) throws IOException {
         Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
+
         reader = DirectoryReader.open(indexDirectory);
         indexSearcher = new IndexSearcher(reader);
         indexSearcher.setSimilarity(new BM25Similarity());
@@ -60,9 +61,13 @@ public class Searcher {
 
     }
 
+
+    private double overlayFunction(double L, double xPos) {
+        return (Math.pow(10 / (L / 2), 2) * xPos * (L - xPos));
+    }
+
     public TopDocs search(String searchQuery)
             throws IOException, ParseException {
-
         query = queryParser.parse(searchQuery);
         return indexSearcher.search(query, LuceneConstants.MAX_SEARCH);
     }
@@ -131,7 +136,6 @@ public class Searcher {
                 term = it.next();
             }
         }
-
 
 
         Collections.sort(bestMatches, new Comparator<Tuple>() {

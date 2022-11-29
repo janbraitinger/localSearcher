@@ -11,10 +11,9 @@ public class Main {
     private final int PORT = 4001;
 
     public Main() throws IOException, ParseException {
-
         Application app = new Application();
-        new ApiController(PORT, app);
         app.setup();
+        new ApiController(PORT, app);
 
     }
 

@@ -14,22 +14,30 @@ public class Application {
     private String autoCompletePath;
     private String configFile = "/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Implementierung/conf.ini";
     private String dataDir;
+    private boolean coldstart = true;
 
     public Application() throws IOException, ParseException {
         Console.print("Starting Application", 0);
         this.confManager = new ConfManager(configFile);
-        this.readConf();
-        this.searcher = new Searcher(indexerDir);
 
     }
 
 
-    public void setup() throws IOException {
+
+
+    public void setup() throws IOException, ParseException {
         this.readConf();
+        Console.print("SetUp starts", 0);
         this.deleteIndex();
         this.createIndex();
+        if(coldstart){
+            this.searcher = new Searcher(indexerDir);
+            coldstart = false;
+        }
+
         this.searcher.setNewIndex(indexerDir);
         this.searcher.writeIndexTerms(autoCompletePath);
+        Console.print("SetUp is done", 0);
     }
 
     private void readConf(){
@@ -37,12 +45,13 @@ public class Application {
         this.dataDir = confManager.readConf("searching", "dataPath");
         this.autoCompletePath = confManager.readConf("index", "autocomplete");
         this.indexerDir = confManager.readConf("index", "indexerDir");
+        Console.print("Path which contains the documents is "+ dataDir, 0);
+        Console.print("The index file is saved under "+ indexerDir, 0);
     }
 
     private String createIndex() throws IOException {
         Console.print("Create index under "+ indexerDir, 0);
         Indexer indexer = new Indexer(indexerDir);
-
         long startTime = System.currentTimeMillis();
         int numIndexed = indexer.createIndex(this.dataDir, new TextFileFilter());
         //Console.print("dirPath is " + this.confManager.readConf("searching", "dataPath"), 0);
@@ -56,8 +65,13 @@ public class Application {
     }
 
     private void deleteIndex() {
-        Arrays.stream(new File(this.indexerDir).listFiles()).forEach(File::delete);
-    }
+        Console.print("Deleting old indexes", 0);
+        try {
+            Arrays.stream(new File(this.indexerDir).listFiles()).forEach(File::delete);
+        }catch (Exception e){
+            Console.print("Deleting index file", 2);
+        }
+        }
 
     public Searcher getSearcher(){
         return this.searcher;

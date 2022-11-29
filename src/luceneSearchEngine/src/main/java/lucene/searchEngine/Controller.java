@@ -10,14 +10,13 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.json.JSONObject;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 
 public class Controller {
 
@@ -46,10 +45,14 @@ public class Controller {
 
         String data = this.handler.pathParam("data");
         JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
-        String body = jsonObject.get("body").toString();
+        String embeddingTypes =  jsonObject.get("embedding").toString();
+
+
+        String body = jsonObject.get("query").toString();
         body = body.replace("&", " ");
         body = body.substring(1, body.length() - 1);
-        String searchResult = this.searchInDocuments(body, searcher).toString();
+        body = body.replaceAll("[-+.^:,]","");
+        String searchResult = this.searchInDocuments(body, searcher, embeddingTypes).toString();
         this.handler.result(searchResult); // change to json
 
 
@@ -61,19 +64,16 @@ public class Controller {
     }
 
     public void setConf(ConfManager confManager, Searcher searcher, Application app) throws IOException, ParseException {
-
-
         String data = handler.pathParam("data");
         JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
         String body = jsonObject.get("body").toString();
         body = body.substring(1, body.length() - 1);
         body = body.replaceAll("-", "/");
-
         String path = body;
-
 
             if (path != null && Files.exists(Path.of(path))) {
                 this.changeDataDir(path, confManager);
+                Console.print("Reindex",0);
                 app.setup();
                 handler.result(this.buildMessage("reindexedTime", "no server time is set, sry"));
             } else {
@@ -93,26 +93,28 @@ public class Controller {
     }
 
 
-    private ArrayList<JSONObject> searchInDocuments(String searchQuery, Searcher searcher) throws IOException, ParseException, InvalidTokenOffsetsException {
+    private ArrayList<JSONObject> searchInDocuments(String searchQuery, Searcher searcher, String embeddingTypes) throws IOException, ParseException, InvalidTokenOffsetsException {
+        searchQuery = searchQuery.toLowerCase();
         long startTime = System.currentTimeMillis();
         ArrayList<JSONObject> addHitsToMessage = new ArrayList<>();
 
         SearchObject searchObject = new SearchObject(searchQuery, searcher);
 
 
-        searchObject.activateEmbeddings();
+        searchObject.checkEmbedding(embeddingTypes);
 
 
         TopDocs directHits = searcher.search(searchObject.getQueryString());
         ScoreDoc[] directHitCollection = directHits.scoreDocs;
 
+        ArrayList<Integer> checkDockList = new ArrayList<>();
 
         // without Embeddings
         for (ScoreDoc hit : directHitCollection) {
 
             int docId = hit.doc;
-            if (!searchObject.hitDocs.contains(docId)) {
-                searchObject.hitDocs.add(docId);
+            if (!checkDockList.contains(docId)) {
+                checkDockList.add(docId);
 
                 Document document = searcher.getDocument(hit);
                 float weight = searchObject.getWeight(docId) + 2;
@@ -130,7 +132,7 @@ public class Controller {
             ScoreDoc[] hitCollection;
             try {
                 int embedding = 1;
-                for (List<List<String>> embeddingList : searchObject.getEmbeddings()) {
+                for (List<List<String>> embeddingList : searchObject.getEmbeddings(embeddingTypes)) {
 
                     for (List<String> singleCombination : embeddingList) {
 
@@ -145,8 +147,8 @@ public class Controller {
                         for (ScoreDoc hit : hitCollection) {
 
                             int docId = hit.doc;
-                            if (!searchObject.hitDocs.contains(docId)) {
-                                searchObject.hitDocs.add(docId);
+                            if (!checkDockList.contains(docId)) {
+                                checkDockList.add(docId);
                                 Document document = searcher.getDocument(hit);
                                 double similarity = searchObject.getSimilarityTo(newSearchQuery, embedding);
                                 float weight = (float) (searchObject.getWeight(docId) + similarity);
@@ -188,6 +190,7 @@ public class Controller {
         messageSubItem.put("Weight", weight);
         messageSubItem.put("Preview", preview);
         messageSubItem.put("Date", doc.get(LuceneConstants.CREATION_DATE));
+        //messageSubItem.put("Date", "doc.get(LuceneConstants.CREATION_DATE)");
         return messageSubItem;
     }
 

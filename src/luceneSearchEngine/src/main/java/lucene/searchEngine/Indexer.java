@@ -1,6 +1,7 @@
 package lucene.searchEngine;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
@@ -54,10 +55,10 @@ public class Indexer {
         String content = null;
 
         if(checkFileName(file).equals("pdf")) {
-            content = getText(file);
+            content = getText(file).toLowerCase().replaceAll("\\d","");
         }
         if(checkFileName(file).equals("txt")){
-            content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            content = FileUtils.readFileToString(file, StandardCharsets.UTF_8).toLowerCase().replaceAll("\\d","");
         }
 
 
@@ -73,6 +74,8 @@ public class Indexer {
         ft.setStoreTermVectorPayloads( true );
         ft.setStoreTermVectorPositions( true );
         ft.setTokenized( true );
+
+
 
 
         TextField contentField = new TextField(LuceneConstants.CONTENTS, content, Field.Store.YES);

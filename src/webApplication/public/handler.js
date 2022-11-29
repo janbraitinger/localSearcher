@@ -10,11 +10,11 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
-  "pageLength": 10,
+ // "pageLength": 10,
 
   pagingType: 'full_numbers',
   searching: true,
-  paging: true,
+  paging: false,
   info: false,
   "destroy": true,
   responsive: true,
@@ -271,8 +271,27 @@ setInterval(makeAlert, 500);
 
 
 
+
 getSection.searchButton.click(function() {
   var searchQuery = getSection.searchInputField.val();
+  var embeddingSearchChecked = []
+  if($('#checkboxGoogle').is(':checked')){
+    embeddingSearchChecked.push("google");
+  }
+  if($('#checkboxPubMed').is(':checked')){
+    embeddingSearchChecked.push("pubmed");
+  }
+
+
+  let searchObj = new Object();
+  searchObj.embedding = embeddingSearchChecked;
+  searchObj.query = searchQuery;
+
+
+  let searchMsg = JSON.stringify(searchObj)
+
+  
+
 
   removeElements()
   dataTable.clear().draw()
@@ -283,7 +302,7 @@ getSection.searchButton.click(function() {
 
       getSection.loader.show()
 
-      socket.emit(RpcSendCall.SEARCH, searchQuery)
+      socket.emit(RpcSendCall.SEARCH, searchMsg)
   }
 });
 
@@ -439,6 +458,7 @@ function showResultList(jsonPara) {
   const matching = [Constant.DIRECT_MATCHING, Constant.GOOGLE_EMBEDDING, Constant.PUPMED_EMBEDDING]
   var matchingId = 0
   var objCount = 0
+  console.log(jsonPara)
   for (let itemCollection of jsonPara) {
    
       if (itemCollection["time"] || itemCollection["stats"]) {
