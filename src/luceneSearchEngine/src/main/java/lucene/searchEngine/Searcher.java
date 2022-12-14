@@ -55,7 +55,6 @@ public class Searcher {
         indexSearcher.setSimilarity(new BM25Similarity());
 
         queryParser = new QueryParser(LuceneConstants.CONTENTS, new StandardAnalyzer());
-
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
 

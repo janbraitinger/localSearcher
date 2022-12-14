@@ -132,9 +132,9 @@ public class Indexer {
     public int createIndex(String dataDirPath, FileFilter filter) throws IOException {
         int i=0;
         File[] files = new File(dataDirPath).listFiles();
-        //if(files != null){
-        for (File file : files) {
 
+        if(files != null){
+        for (File file : files) {
             if (!file.isDirectory()
                     && !file.isHidden()
                     && file.exists()
@@ -144,7 +144,7 @@ public class Indexer {
                 indexFile(file);
             }
         }
-    //}
+    }
         this.writer.commit();
         return this.writer.numDocs();
     }

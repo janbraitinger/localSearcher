@@ -187,7 +187,7 @@ public class Controller {
         messageSubItem.put("Term", term);
         messageSubItem.put("Title", doc.get(LuceneConstants.FILE_NAME));
         messageSubItem.put("Path", doc.get(LuceneConstants.FILE_PATH));
-        messageSubItem.put("Weight", weight);
+        messageSubItem.put("Weight", weight); // if problem -> remove
         messageSubItem.put("Preview", preview);
         messageSubItem.put("Date", doc.get(LuceneConstants.CREATION_DATE));
         //messageSubItem.put("Date", "doc.get(LuceneConstants.CREATION_DATE)");

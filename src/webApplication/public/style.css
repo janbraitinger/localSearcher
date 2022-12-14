@@ -77,9 +77,6 @@ main{
     z-index: 200 !important;
 }
 
-#searchQueryInputField:placeholder-shown{
-    box-shadow:none !important;
-}
 
 
 #checkBoxes{
@@ -138,8 +135,8 @@ main{
 
 #filterArea{
     text-align: center;
-
-    margin: 25px;
+    margin-top: -25px;
+    margin-bottom: 25px;
 
 }
 
@@ -452,4 +449,31 @@ div.jqcloud span {
     display: inline-block;
     border:1px solid black;
 
+  }
+
+
+  #indexingArea{
+    width: 100%;
+
+    /* Center child horizontally*/
+    display: flex;
+    justify-content: center;
+  }
+
+  #indexingFile{
+
+    width: 200px;
+  }
+
+  #indexingWrapper{
+    text-align: center;
+    color:gray;
+    display: none;
+  }
+
+  #indexingDone{
+    text-align: center;
+    margin: 50px;
+
+ 
   }

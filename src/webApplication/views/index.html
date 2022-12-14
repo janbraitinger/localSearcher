@@ -102,8 +102,8 @@
             </div>
          </div>
          <div id="filterArea" style="display:none;">
-            <div class="container">
-               <div class="row">
+     
+            <!--   <div class="row">
                   <div class="col-sm">
                      <div class="dropdown">
                         <button class="btn btn-default dropdown-toggle" type="button" 
@@ -125,24 +125,15 @@
                            </li>
                         </ul>
                      </div>
-                  </div>
-                  <div class="col-sm">
-               
-                  </div>
-                  <table border="0" cellspacing="5" cellpadding="5">
-                     <tbody>
-                        <tr>
-                           <td>Minimum date:</td>
-                           <td><input type="text" id="min" name="min"></td>
+                  </div>-->
+
+                          <span style="margin:15px;">filter for date</span>
+                           <input type="text" id="min" name="min" placeholder="minimume date">
                        
-                           <td>Maximum date:</td>
-                           <td><input type="text" id="max" name="max"></td>
-                        </tr>
-                     </tbody>
-                  </table>
+                      
+                           <input type="text" id="max" name="max" placeholder="maximum date ">
                   
-               </div>
-            </div>
+  
          </div>
          <ul id="results" class="list-group">
          </ul>
@@ -210,11 +201,20 @@
                      <div class="form-group">
                         <label for="recipient-name" class="col-form-label">IndexPath:</label>
                         <input type="text" class="form-control" id="indexpath"  placeholder="/Users/janbraitinger/Documents/Studium/Sommersemester2022/Masterarbeit/Experimente/05052022_lucene_test/documents/alt/">
+                       <div id="indexingWrapper">
+                        <div id="indexingArea">
+                           <img src="img/loading.gif" id="indexingFile">
+                         
+                        </div>
+                        <i>waiting for the search engine to be done with indexing the new files</i>
+                        </div>
                         <button type="button" class="btn btn-dark" style="margin-top:10px; float:right;"id="changeIndexBtn">change index</button>
                      </div>
                   </form>
-                  <span id="servermsg"></span>
-                  <p id="folderContent"></p>
+                     <div id="indexingDone"></div>
+                 <!--<p id="servermsg"></p>
+                  <p id="folderContent"></p>-->
+         
                </div>
             </div>
          </div>

@@ -258,7 +258,10 @@ socket.on(RpcGetCall.SERVERMESSAGE, (data) => {
 
   stdoutBuffer += data + "<br/>"
 
-  getSection.serverMessage.html(stdoutBuffer)
+  //getSection.serverMessage.html("indexing done")
+  $("#indexingWrapper").hide()
+  $("#indexingDone").text("Indexing done. Please close this window.")
+
 })
 
 
@@ -511,6 +514,10 @@ getSection.changeIndexBtn.on("click", function() {
   getSection.searchResults.html("")
   getSection.searchInputField.val("")
   socket.emit("reIndex", newIndex)
+  $("#indexingWrapper").show();
+  $("#changeIndexBtn").hide();
+  
+
 
 
 })
