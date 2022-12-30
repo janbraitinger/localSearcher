@@ -1,0 +1,7 @@
+name: webApplication
+packages:
+  - path: controllers
+  - path: public
+  - path: routes
+language: javascript
+appmap_dir: tmp/appmap
