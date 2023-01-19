@@ -3,6 +3,7 @@ package lucene.searchEngine;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.snowball.SnowballAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
@@ -33,8 +34,8 @@ public class Indexer {
         Directory indexDirectory = FSDirectory.open(Paths.get(indexDirectoryPath));
         CharArraySet stopWords = addStopWordArray(StopWords.stopWordArray);
         StandardAnalyzer analyzer = new StandardAnalyzer(stopWords);
-        IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
+        IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
         this.writer = new IndexWriter(indexDirectory, iwc);
     }
 

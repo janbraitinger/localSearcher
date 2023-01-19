@@ -1,8 +1,6 @@
 package lucene.searchEngine;
 
-import java.security.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 class SimilarObject {

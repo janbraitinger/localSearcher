@@ -1,8 +1,6 @@
 package lucene.searchEngine;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.StopAnalyzer;
+
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
@@ -10,7 +8,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.highlight.*;
-import org.apache.lucene.search.highlight.Formatter;
+
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -23,12 +21,11 @@ import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static java.util.Collections.reverseOrder;
-import static java.util.Comparator.comparing;
+
 
 
 public class Searcher {
-
+    private Map<String, ArrayList<Integer>> termPositionsMap = new HashMap<>();
     IndexReader reader;
     IndexSearcher indexSearcher;
     QueryParser queryParser;
@@ -183,28 +180,15 @@ public class Searcher {
     }
 
 
-    public String getPreviewOfSingleQuery(int docId, String filePath, String query, int ngram) throws IOException, ParseException, InvalidTokenOffsetsException {
-
-        Formatter formatter = new SimpleHTMLFormatter();
-        Analyzer analyzer = new StopAnalyzer();
-        QueryScorer queryScorer = new QueryScorer(queryParser.parse(query));
-        Highlighter highlighter = new Highlighter(formatter, queryScorer);
-        Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 1);
-        highlighter.setTextFragmenter(fragmenter);
-
-        TokenStream stream = TokenSources.getTokenStream(reader, docId, LuceneConstants.HIGHLIGHT_INDEX, analyzer);
-        String text = getDocumentById(docId).get(LuceneConstants.HIGHLIGHT_INDEX);
-        String highlight;
-        try {
-            highlight = highlighter.getBestFragments(stream, text, 50)[0];
-        } catch (Exception e) {
-            highlight = "No preview available";
-        }
-        return highlight;
+    public String getPreviewOfSingleQuery(int docId, String inputQuery) throws IOException, ParseException, InvalidTokenOffsetsException {
+        query = queryParser.parse(inputQuery);
+        Highlighter highlighter = new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query));
+        String text = getDocumentById(docId).get(LuceneConstants.CONTENTS);
+        return highlighter.getBestFragment(new StandardAnalyzer(), LuceneConstants.HIGHLIGHT_INDEX, text);
     }
 
     public Integer calcIndexDistance(int docId, String[] query) throws IOException {
-        ArrayList indexe = new ArrayList();
+      ArrayList indexe = new ArrayList();
         List<List<Integer>> lst = new ArrayList<List<Integer>>();
 
 
@@ -244,9 +228,41 @@ public class Searcher {
         Collections.sort(counterList);
 
 
+
+
+
         return counterList.get(0);
 
-    }
+/*
+        for (String term : query) {
+            ArrayList<Integer> tmpIndexes = getIndexPositionOfTerm(docId, term);
+            if (tmpIndexes.isEmpty()) {
+                return 1;
+            }
+            lst.add(tmpIndexes);
+        }
+
+        List<List<Integer>> result = cartesian(lst);
+        int minDistance = Integer.MAX_VALUE;
+
+        for (List<Integer> indexes : result) {
+            Collections.sort(indexes);
+            int first = indexes.get(0);
+            int last = indexes.get(indexes.size() - 1);
+            int distance = Math.abs(first - last);
+            minDistance = Math.min(minDistance, distance);
+        }
+        return minDistance;*/
+
+
+
+}
+
+
+
+
+
+
 
     public List<List<Integer>> cartesian(List<List<Integer>> list) {
         List<List<Integer>> result = new ArrayList<List<Integer>>();
@@ -294,4 +310,42 @@ public class Searcher {
         }
         return positonList;
     }
+
+
+
+    // faster
+       /*  private ArrayList<Integer> getIndexPositionOfTerm(int docId, String query) throws IOException {
+            ArrayList<Integer> positonList = termPositionsMap.get(query);
+            if (positonList != null) {
+                return positonList;
+            }
+            positonList = new ArrayList<>();
+            Terms vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
+            TermsEnum terms = vector.iterator();
+            PostingsEnum positions = null;
+            BytesRef term;
+
+            while ((term = terms.next()) != null) {
+                String termstr = term.utf8ToString();
+                if (termstr.equals(query)) {
+                    long freq = terms.totalTermFreq();
+                    positions = terms.postings(positions, PostingsEnum.POSITIONS);
+                    positions.nextDoc();
+
+                    for (int i = 0; i < freq; i++) {
+                        positonList.add(positions.nextPosition());
+                    }
+                    termPositionsMap.put(query, positonList);
+                    return positonList;
+                }
+            }
+            return positonList;
+        }*/
+
+
+
+
+
+
+
 }

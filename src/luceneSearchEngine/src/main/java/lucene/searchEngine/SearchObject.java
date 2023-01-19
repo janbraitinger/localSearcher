@@ -5,6 +5,10 @@ import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class SearchObject {
 
@@ -25,14 +29,18 @@ public class SearchObject {
     }
 
 
+    public void setNewQuery(String query){
+        this.QUERY = query;
+    }
+
     public void checkEmbedding(String embedding) {
         if (embedding.length() > 2) {
             this.useEmbeddings = true;
         }
     }
 
-
-    public List<List<List<String>>> getEmbeddings(String embeddingTypes) {
+/*
+    public List<List<List<String>>> getEmbeddings(String embeddingTypes) throws ExecutionException, InterruptedException {
         // todo: dont code the embedding selection hard
 
         ArrayList pubMedList = new ArrayList();
@@ -41,10 +49,13 @@ public class SearchObject {
         System.out.println(embeddingTypes);
         for (String query : this.getQueryArray()) {
 
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+
 
             if (embeddingTypes.contains("pubmed")) {
                 long startTime = System.currentTimeMillis();
-                ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 10);
+                Future<ArrayList> pubmedEmbeddingsFuture = executor.submit(() -> this.searcher.pubmed.getSimilarWords(query, 10));
+                ArrayList pubmedEmbeddings = pubmedEmbeddingsFuture.get();
                 long estimatedTime = System.currentTimeMillis() - startTime;
                 timeStats.put("pubmed" + counter, estimatedTime);
                 pubMedList.add(pubmedEmbeddings);
@@ -52,12 +63,13 @@ public class SearchObject {
 
             if (embeddingTypes.contains("google")) {
                 long startTime = System.currentTimeMillis();
-                ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 10);
+                Future<ArrayList> googleEmbeddingsFuture = executor.submit(() -> this.searcher.google.getSimilarWords(query, 10));
+                ArrayList googleEmbeddings = googleEmbeddingsFuture.get();
                 long estimatedTime = System.currentTimeMillis() - startTime;
                 timeStats.put("google" + counter, estimatedTime);
                 googleList.add(googleEmbeddings);
             }
-
+            executor.shutdown();
 
             counter++;
         }
@@ -66,44 +78,85 @@ public class SearchObject {
         if (embeddingTypes.contains("google")) {
             List<List<String>> googleCombinations = cartesian(googleList);
             listOfLists.add(googleCombinations);
+            System.out.println(googleCombinations);
         }
         if (embeddingTypes.contains("pubmed")) {
             List<List<String>> pubmedCombinations = cartesian(pubMedList);
+
+            System.out.println(pubmedCombinations);
             listOfLists.add(pubmedCombinations);
         }
 
 
         return listOfLists;
 
+    }*/
+
+    public List<List<List<String>>> getEmbeddings(String embeddingTypes) throws ExecutionException, InterruptedException {
+        ArrayList pubMedList = new ArrayList();
+        ArrayList googleList = new ArrayList();
+        System.out.println(embeddingTypes);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        List<Future> futures = new ArrayList<>();
+        for (String query : this.getQueryArray()) {
+            if (embeddingTypes.contains("pubmed")) {
+                futures.add(executor.submit(() -> {
+                    long startTime = System.currentTimeMillis();
+                    ArrayList pubmedEmbeddings = this.searcher.pubmed.getSimilarWords(query, 10);
+                    long estimatedTime = System.currentTimeMillis() - startTime;
+                    timeStats.put("pubmed" + query, estimatedTime);
+                    pubMedList.add(pubmedEmbeddings);
+                }));
+            }
+
+            if (embeddingTypes.contains("google")) {
+                futures.add(executor.submit(() -> {
+                    long startTime = System.currentTimeMillis();
+                    ArrayList googleEmbeddings = this.searcher.google.getSimilarWords(query, 10);
+                    long estimatedTime = System.currentTimeMillis() - startTime;
+                    timeStats.put("google" + query, estimatedTime);
+                    googleList.add(googleEmbeddings);
+                }));
+            }
+        }
+        for (Future future : futures) {
+            future.get();
+        }
+        executor.shutdown();
+
+        List<List<List<String>>> listOfLists = new ArrayList<>();
+        if (embeddingTypes.contains("google")) {
+            List<List<String>> googleCombinations = cartesian(googleList);
+            listOfLists.add(googleCombinations);
+            //System.out.println(googleCombinations);
+        }
+        if (embeddingTypes.contains("pubmed")) {
+            List<List<String>> pubmedCombinations = cartesian(pubMedList);
+            System.out.println(pubmedCombinations);
+            //listOfLists.add(pubmedCombinations);
+        }
+        return listOfLists;
     }
+
+
+
+
+
+
 
     public HashMap getTimeStats() {
         return this.timeStats;
     }
 
-    public List<List<String>> getEmbeddingTermsA() {
-        ArrayList listOfSimilarLists = new ArrayList();
 
+    public String getPreview(int docId) throws InvalidTokenOffsetsException, IOException, ParseException {
 
-        for (String query : this.getQueryArray()) {
-            ArrayList similarWordList = this.searcher.google.getSimilarWords(query, 25);
-            listOfSimilarLists.add(similarWordList);
-        }
-
-        List<List<String>> combinations = cartesian(listOfSimilarLists);
-        System.out.println(combinations);
-        return combinations;
-
-
-    }
-
-
-    public String getPreview(int docId, String path) throws InvalidTokenOffsetsException, IOException, ParseException {
-        return this.searcher.getPreviewOfSingleQuery(docId, path, this.QUERY, 25);
+        return this.searcher.getPreviewOfSingleQuery(docId, this.QUERY);
 
     }
 
     public double getSimilarityTo(String embedding, int embeddingType) {
+
         if (this.IS_MULTIPLE) {
             String[] tmp = embedding.split("\\W+");
             int i = 0;
@@ -120,12 +173,16 @@ public class SearchObject {
             }
             return sumSimilarity / tmp.length;
         }
+
+
         embedding = this.removeLastCharacter(embedding);
+        this.QUERY = this.removeLastCharacter(this.QUERY);
 
         if (embeddingType == 1) {
             return this.searcher.pubmed.getSimilarity(this.QUERY, embedding);
         }
         if (embeddingType == 2) {
+
             return this.searcher.google.getSimilarity(this.QUERY, embedding);
         }
 
@@ -183,18 +240,19 @@ public class SearchObject {
 
     public List<List<String>> cartesian(List<List<String>> list) {
         long startTime = System.currentTimeMillis();
+        int i=0;
         List<List<String>> result = new ArrayList<List<String>>();
         int numSets = list.size();
         String[] tmpResult = new String[numSets];
-
+        i++;
         cartesian(list, 0, tmpResult, result);
+
         long endTime = System.currentTimeMillis();
-        Console.print("Building all combinations needed " + (endTime - startTime) + " ms", 0);
+        Console.print("Building all combinations needed " + (endTime - startTime) + " ms | " + i, 0);
         return result;
     }
 
-    private void cartesian(List<List<String>> list, int n,
-                           String[] tmpResult, List<List<String>> result) {
+    private void cartesian(List<List<String>> list, int n, String[] tmpResult, List<List<String>> result) {
         if (n == list.size()) {
             result.add(new ArrayList<String>(Arrays.asList(tmpResult)));
             return;

@@ -13,6 +13,7 @@ const {
 var wordCloudData = "";
 var confData = "/";
 var luceneStatusFlag = false;
+var _coldStart = true;
 
 module.exports = (io) => {
     io.on('connection', socket => {
@@ -21,32 +22,45 @@ module.exports = (io) => {
             let suggestions = autocomplete(input)
             socket.emit("autocomplete", suggestions)
         });
+
         socket.on('finalSearch', async (searchQuery) => {
             let searchResult = await search(searchQuery)
-            socket.emit("docResultList", searchResult)
+            socket.emit("docResultList", searchResult.data)
         });
 
         socket.on('getCloud', async (searchQuery) => {
-            let wordCloudData = await wordCloud();
-            socket.broadcast.emit("wordcloud", wordCloudData)
+            if (_coldStart) {
+                wordCloudData = await wordCloud();
+                wordCloudData = wordCloudData.data;
+                _coldStart = false;
+            }
+            let length = (wordCloudData.data) ? Object.keys(wordCloudData.data).length : 0;
+        
+            if (length === 0) {
+                wordCloudData = await wordCloud();
+                wordCloudData = wordCloudData.data;
+            }
+            socket.broadcast.emit("wordcloud", wordCloudData);
         });
+        
 
         socket.on("reIndex", async (data) => {
             let stdout = await reIndex(data)
-            if(stdout != "error"){
-                let wordCloudData = await wordCloud();
-                let confData = await getConfData();
+            if (stdout != "error") {
+                wordCloudData = await wordCloud();
+                wordCloudData = wordCloudData.data
+                confData = await getConfData();
+                confData = confData.data
                 socket.broadcast.emit("wordcloud", wordCloudData)
-                console.log("reindex")
                 socket.broadcast.emit("getconf", confData)
                 readAutocompleteFile()
-                socket.emit("stdout", "indexing done in " + stdout.body)
+                socket.emit("stdout", stdout.body)
             }
 
         });
 
         (async function() {
-            if(luceneStatusFlag){
+            if (luceneStatusFlag) {
                 wordCloudData = await wordCloud();
                 confData = await getConfData();
             }
@@ -64,10 +78,10 @@ module.exports = (io) => {
     // luceneStatus
     setInterval(async () => {
         let luceneStatus = await statusCheck()
-        body = luceneStatus.body
-        if(body == "online"){
+        body = luceneStatus.data
+        if (body == "online") {
             luceneStatusFlag = true
-        }else{
+        } else {
             luceneStatusFlag = false
         }
         io.emit("luceneStatus", body);

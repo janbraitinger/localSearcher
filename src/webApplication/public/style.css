@@ -68,15 +68,39 @@ main{
     outline:0px !important;
     box-shadow: none !important;
     border:gainsboro solid 1px !important;
+   
 
 }
 
-#searchQueryInputField:hover{
 
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px !important;
-    z-index: 200 !important;
+
+#list{
+  
+    z-index: 1 !important;
+    list-style-type:square;
+    margin-top: -20px;
+
+    margin-left: 100px;
+    background-color: #fff;
+
+    border-radius: 0 0  5px 5px;
+    max-height: 200px; 
+    margin-right: 150px;
+    overflow:auto;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
+   
+
+    
 }
 
+
+
+
+
+.word-wrap {
+    word-break: break-all;
+    hyphens: auto;
+    }
 
 
 #checkBoxes{
@@ -86,12 +110,6 @@ main{
 }
 
 #countEntrys{
-    display: none;
-}
-
-
-#list{
-
     display: none;
 }
 
@@ -149,22 +167,6 @@ main{
 
 
 
-#list{
-    list-style-type:square;
-    margin-top: -20px;
-
-    margin-left: 100px;
-    background-color: #fff;
-    
-    border-radius: 0 0  5px 5px;
-    max-height: 200px; 
-    margin-right: 150px;
-    overflow:auto;
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
-    z-index: 99 !important;
-
-    
-}
 
 .searchBulletImg{
 
@@ -196,7 +198,7 @@ main{
 
 .list-items:hover{
     z-index: 101;
-    background-color: #ddd;
+    background-color: #00556f5d;
 }
 .loader{
     position: fixed;
@@ -476,4 +478,9 @@ div.jqcloud span {
     margin: 50px;
 
  
+  }
+
+
+  .light{
+    color:rgb(245, 245, 245);
   }

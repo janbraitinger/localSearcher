@@ -1,6 +1,6 @@
 const axios = require('axios');
 const LUCENE_ENDPOINT_PORT = 4001
-const LUCENE_ENDPOINT_URL = `http://localhost:${LUCENE_ENDPOINT_PORT}/`
+const LUCENE_ENDPOINT_URL = `http://localhost:${LUCENE_ENDPOINT_PORT}/api/v1/`
 
 
 module.exports.statusCheck = async () => {
@@ -15,8 +15,7 @@ module.exports.statusCheck = async () => {
 
 module.exports.search = async (query) => {
     let tmpClientOb = JSON.parse(query)
-    //tmpClientOb.query = query.replace(/ /g, "&");
-    //let searchMsg = buildJSON("search", JSON.stringify(tmpClientOb))
+
     return axios.get(LUCENE_ENDPOINT_URL + "search/" + JSON.stringify(tmpClientOb))
         .then(response => response.data)
         .catch(() => {

@@ -359,7 +359,15 @@ function handleListElement(MATCHING, obj) {
       getWeight = "unknown"
   }
 
+  try{
+    obj.MATCHING
+  }catch{
+    return
+  
+  }
+
   termArray.push(getTerm)
+
 
 
   let termButton = "<button class='termBtn' style='background-color:" + selectMatching(obj.Matching) + "; color:#fff;'>" + getTerm + "</button>"
@@ -369,8 +377,19 @@ function handleListElement(MATCHING, obj) {
 
 
   let canvas = "<canvas class='weightCanvas' id='myCanvas" + canvasId + "'>Your browser does not support the HTML5 canvas tag.</canvas>"
+  let preview = ""
+  try{
+  preview =  obj.Preview.replace(/[\[\]]/g, "");
+  preview = "[...] " + preview + " [...]"
+  }
+  catch{
+    preview = "error"
+  }
 
-  dataTable.row.add([obj.Title, obj.Date, termButton, canvas, weightResult, obj.Path, obj.Preview]).draw(true);
+
+
+
+  dataTable.row.add([obj.Title, obj.Date, termButton, canvas, weightResult, obj.Path, preview]).draw(true);
 
 
   $('#aexample').show()
@@ -398,10 +417,9 @@ function logslider(position) {
 function fillWeightCanvers(weight) {
 
 
-  //var canvases = document.getElementsByTagName('canvas');
-  //for( var i=0; i<canvases.length; i++){
+
   let canvas = document.getElementById("myCanvas" + canvasId)
-  //let ctx = canvases[i].getContext('2d');
+
   try {
       let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'lightblue'
@@ -412,7 +430,8 @@ function fillWeightCanvers(weight) {
   } catch {
       return
   }
-  //}
+
+
 }
 
 
@@ -435,7 +454,7 @@ $('#aexample tbody').on('click', 'tr', function() {
   $(".modal-title").html(dataTable.row(this).data()[0]);
   $(".path span").html(dataTable.row(this).data()[5]);
   $(".term span").html(dataTable.row(this).data()[2]);
-  $(".preview span").html(dataTable.row(this).data()[6]);
+  $(".preview span").html("<div class='word-wrap'>" + dataTable.row(this).data()[6] + "</div>");
 
   $('.btn-primary').off('click');
 
@@ -449,6 +468,7 @@ $('#aexample tbody').on('click', 'tr', function() {
 
 
 function showResultList(jsonPara) {
+  console.log(jsonPara)
   if(jsonPara.header == "error"){
     alert("server is indexing atm")
     return
@@ -463,12 +483,18 @@ function showResultList(jsonPara) {
   var objCount = 0
   console.log(jsonPara)
   for (let itemCollection of jsonPara) {
-   
+      try{
       if (itemCollection["time"] || itemCollection["stats"]) {
 
           getSection.docCounter.show()
-          getSection.docCounter.html("found " + jsonPara.length-- + " documents in " + itemCollection["time"] + " ms <br/> " + JSON.stringify(itemCollection["stats"]))
+      
+
+          let length = parseInt(jsonPara.length)-1
+          getSection.docCounter.html("found " + length + " documents in " + itemCollection["time"] + " ms <br/> <span class='light'>" + JSON.stringify(itemCollection["stats"]) + "</span>")
           break
+      }}
+      catch{
+        console.log("time error")
       }
       let selectMatching = matching[matchingId]
       let liElement = handleListElement(selectMatching, itemCollection)
@@ -490,6 +516,10 @@ function showResultList(jsonPara) {
       termArray = []
 
   }
+
+  //dataTable.column(4).visible(false); // verbirgt die 4. Spalte
+
+
 }
 
 
@@ -634,4 +664,9 @@ $(document).ready(function() {
       console.log("drwaew")
   });
 });
+
+
+
+
+
 

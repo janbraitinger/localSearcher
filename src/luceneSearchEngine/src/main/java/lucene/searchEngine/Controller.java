@@ -10,12 +10,15 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class Controller {
@@ -25,43 +28,48 @@ public class Controller {
 
     public Controller(Context handler) {
         this.handler = handler;
+        this.handler.contentType("application/json");
     }
 
     public void getStatus() {
-        this.handler.result(this.buildMessage("status", "online"));
+        this.handler.json(new Response("status", "online"));
+
     }
 
     public void getWordCloud(Searcher searcher) {
         ArrayList<JSONObject> wordcloudList = searcher.wordCloudList;
-        this.handler.result(this.buildMessage("wordcloud", wordcloudList));
+        List<Map<String, Object>> data = wordcloudList.stream()
+                .map(json -> json.toMap())
+                .collect(Collectors.toList());
+        this.handler.json(new Response("wordcloud", data));
     }
 
     public void getConf(ConfManager conf) {
         String confResult = conf.readConf("searching", "dataPath");
-        this.handler.result(this.buildMessage("get conf", confResult));
+        this.handler.json(new Response("configuration", confResult));
     }
 
     public void search(Searcher searcher) throws InvalidTokenOffsetsException, IOException, ParseException {
 
         String data = this.handler.pathParam("data");
         JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
-        String embeddingTypes =  jsonObject.get("embedding").toString();
+        String embeddingTypes = jsonObject.get("embedding").toString();
 
 
         String body = jsonObject.get("query").toString();
         body = body.replace("&", " ");
         body = body.substring(1, body.length() - 1);
-        body = body.replaceAll("[-+.^:,]","");
-        String searchResult = this.searchInDocuments(body, searcher, embeddingTypes).toString();
-        this.handler.result(searchResult); // change to json
+        body = body.replaceAll("[-+.^:,]", "");
+        ArrayList<JSONObject> searchResult = this.searchInDocuments(body, searcher, embeddingTypes);
+
+        List<Map<String, Object>> resultList = searchResult.stream()
+                .map(json -> json.toMap())
+                .collect(Collectors.toList());
+        this.handler.json(new Response("resultlist", resultList));
 
 
     }
 
-    public String buildMessage(String header, Object body) {
-        Message msgObj = new Message(header, body);
-        return msgObj.getMessage();
-    }
 
     public void setConf(ConfManager confManager, Searcher searcher, Application app) throws IOException, ParseException {
         String data = handler.pathParam("data");
@@ -71,14 +79,16 @@ public class Controller {
         body = body.replaceAll("-", "/");
         String path = body;
 
-            if (path != null && Files.exists(Path.of(path))) {
-                this.changeDataDir(path, confManager);
-                Console.print("Reindex",0);
-                app.setup();
-                handler.result(this.buildMessage("reindexedTime", "no server time is set, sry"));
-            } else {
-                handler.result(this.buildMessage("error", "folder does not exist"));
-            }
+        if (path != null && Files.exists(Path.of(path))) {
+            this.changeDataDir(path, confManager);
+            Console.print("Reindex", 0);
+            app.setup();
+            //handler.result(this.buildMessage("reindexedTime", "no server time is set, sry"));
+            this.handler.json(new Response("configuration", "new path was set"));
+        } else {
+            this.handler.json(new Response("configuration", "folder does not exist"));
+
+        }
 
 
     }
@@ -100,9 +110,7 @@ public class Controller {
 
         SearchObject searchObject = new SearchObject(searchQuery, searcher);
 
-
         searchObject.checkEmbedding(embeddingTypes);
-
 
         TopDocs directHits = searcher.search(searchObject.getQueryString());
         ScoreDoc[] directHitCollection = directHits.scoreDocs;
@@ -117,9 +125,9 @@ public class Controller {
                 checkDockList.add(docId);
 
                 Document document = searcher.getDocument(hit);
-                float weight = searchObject.getWeight(docId) + 2;
+                float weight = searchObject.getWeight(docId) + 5;
 
-                String preview = searchObject.getPreview(docId, document.get(LuceneConstants.FILE_PATH));
+                String preview = searchObject.getPreview(docId);
                 JSONObject jsonMessage = buildMessage(LuceneConstants.NORMAL_MATCHING, searchObject.getQueryString(), weight, document, preview);
                 addHitsToMessage.add(jsonMessage);
 
@@ -135,7 +143,6 @@ public class Controller {
                 for (List<List<String>> embeddingList : searchObject.getEmbeddings(embeddingTypes)) {
 
                     for (List<String> singleCombination : embeddingList) {
-
                         String newSearchQuery = new String();
 
                         for (String term : singleCombination) {
@@ -144,22 +151,28 @@ public class Controller {
 
                         embeddingHit = searcher.search(newSearchQuery);
                         hitCollection = embeddingHit.scoreDocs;
-                        for (ScoreDoc hit : hitCollection) {
 
+
+                        for (ScoreDoc hit : hitCollection) {
                             int docId = hit.doc;
                             if (!checkDockList.contains(docId)) {
                                 checkDockList.add(docId);
                                 Document document = searcher.getDocument(hit);
-                                double similarity = searchObject.getSimilarityTo(newSearchQuery, embedding);
-                                float weight = (float) (searchObject.getWeight(docId) + similarity);
+                                searchObject.setNewQuery(newSearchQuery);
+                                double similarity = searchObject.getSimilarityTo(searchQuery, embedding);
+                                float weight = (float) (searchObject.getWeight(docId) * Math.pow(3,similarity));
 
-                                String preview = searchObject.getPreview(docId, document.get(LuceneConstants.FILE_PATH));
-                                JSONObject jsonMessage = buildMessage(embedding, newSearchQuery, weight, document, preview);
+                                String preview = searchObject.getPreview(docId);
+                                JSONObject jsonMessage = null;
+
+                                try {
+                                    jsonMessage = buildMessage(embedding, newSearchQuery, weight, document, preview);
+                                } catch (Exception e) {
+
+                                }
                                 addHitsToMessage.add(jsonMessage);
                             }
                         }
-
-
                     }
                     embedding++;
                 }

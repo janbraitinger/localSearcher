@@ -7,7 +7,7 @@ public class ApiController {
     private int port = 4001;
     private Javalin endPoint;
     private Application app;
-    volatile boolean semaphore = false;
+    volatile boolean lock = false;
 
     public ApiController(int port, Application app) {
         Console.print("API runs on Port " + this.port, 0);
@@ -20,43 +20,58 @@ public class ApiController {
 
     private void handleRequests() {
 
-        this.endPoint.get("/status", handler -> {
+        this.endPoint.get("/api/v1/status", handler -> {
             new Controller(handler).getStatus();
+            return;
+
         });
 
-
-        this.endPoint.get("/search/{data}", handler -> {
-            System.out.println(this.semaphore);
-            if (!this.semaphore) {
+        this.endPoint.get("/api/v1/search/{data}", handler -> {
+            if (!this.lock) {
                 new Controller(handler).search(app.getSearcher());
                 return;
             }
-            handler.result("semaphore error");
+            handler.json(new Response("error", "please try again later"));
 
         });
-        this.endPoint.get("/wordcloud", handler -> {
-            new Controller(handler).getWordCloud(app.getSearcher());
-        });
 
-
-        this.endPoint.get("/conf", handler -> {
-            new Controller(handler).getConf(app.getConfManager());
-        });
-
-
-        this.endPoint.get("/setConf/{data}", handler -> {
-            if (!this.semaphore) {
-                this.semaphore = true;
-                System.out.println("was nun");
-                new Controller(handler).setConf(app.getConfManager(), app.getSearcher(), app);
-                System.out.println("done with setting up new path");
-                this.semaphore = false;
+        this.endPoint.get("/api/v1/wordcloud", handler -> {
+            if (!this.lock) {
+                new Controller(handler).getWordCloud(app.getSearcher());
                 return;
             }
-            handler.result("semaphore error");
+            handler.json(new Response("error", "please try again later"));
+        });
 
+
+        this.endPoint.get("/api/v1/conf", handler -> {
+            if (!this.lock) {
+                new Controller(handler).getConf(app.getConfManager());
+                return;
+            }
+            handler.json(new Response("error", "please try again later"));
+        });
+
+
+        this.endPoint.get("/api/v1/setConf/{data}", handler ->
+        {
+            if (!this.lock) {
+                synchronized (this) {
+                    this.lock = true;
+                    System.out.println("was nun");
+                    new Controller(handler).setConf(app.getConfManager(), app.getSearcher(), app);
+                    System.out.println("done with setting up new path");
+                    this.lock = false;
+                    return;
+                }
+            }
+            handler.json(new Response("error", "please try again later"));
         });
     }
+
+
+
+
 
 
 }

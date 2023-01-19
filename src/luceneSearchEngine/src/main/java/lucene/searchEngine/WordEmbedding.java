@@ -53,7 +53,6 @@ public class WordEmbedding {
 
         }
         long endTime = System.currentTimeMillis();
-        Console.print("Generating similar words needed " + (endTime-startTime) + " ms", 0);
         return (ArrayList<String>) tmp.stream().collect(toCollection(ArrayList::new));
         //return tmp;
 
