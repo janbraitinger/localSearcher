@@ -39,14 +39,14 @@ public class SearchObject {
         }
     }
 
-/*
+
     public List<List<List<String>>> getEmbeddings(String embeddingTypes) throws ExecutionException, InterruptedException {
         // todo: dont code the embedding selection hard
 
         ArrayList pubMedList = new ArrayList();
         ArrayList googleList = new ArrayList();
         int counter = 0;
-        System.out.println(embeddingTypes);
+
         for (String query : this.getQueryArray()) {
 
             ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -82,7 +82,6 @@ public class SearchObject {
         }
         if (embeddingTypes.contains("pubmed")) {
             List<List<String>> pubmedCombinations = cartesian(pubMedList);
-
             System.out.println(pubmedCombinations);
             listOfLists.add(pubmedCombinations);
         }
@@ -90,8 +89,8 @@ public class SearchObject {
 
         return listOfLists;
 
-    }*/
-
+    }
+/*
     public List<List<List<String>>> getEmbeddings(String embeddingTypes) throws ExecutionException, InterruptedException {
         ArrayList pubMedList = new ArrayList();
         ArrayList googleList = new ArrayList();
@@ -138,7 +137,7 @@ public class SearchObject {
         return listOfLists;
     }
 
-
+*/
 
 
 
@@ -155,10 +154,10 @@ public class SearchObject {
 
     }
 
-    public double getSimilarityTo(String embedding, int embeddingType) {
+    public double getSimilarityTo(String newQuery, int embeddingType) {
 
         if (this.IS_MULTIPLE) {
-            String[] tmp = embedding.split("\\W+");
+            String[] tmp = newQuery.split("\\W+");
             int i = 0;
             float sumSimilarity = 0;
             for (String term : tmp) {
@@ -175,15 +174,17 @@ public class SearchObject {
         }
 
 
-        embedding = this.removeLastCharacter(embedding);
-        this.QUERY = this.removeLastCharacter(this.QUERY);
 
-        if (embeddingType == 1) {
-            return this.searcher.pubmed.getSimilarity(this.QUERY, embedding);
+        newQuery = this.removeLastCharacter(newQuery);
+        //this.QUERY = this.removeLastCharacter(this.QUERY);
+
+        if (embeddingType == 1) { //pubmed
+            System.out.println("calc similarity between: " + this.QUERY +  " and the embedding: " + newQuery + " which is " + this.searcher.pubmed.getSimilarity(this.QUERY, newQuery));
+
+            return this.searcher.pubmed.getSimilarity(this.QUERY, newQuery);
         }
-        if (embeddingType == 2) {
-
-            return this.searcher.google.getSimilarity(this.QUERY, embedding);
+        if (embeddingType == 2) { //google
+            return this.searcher.google.getSimilarity(this.QUERY, newQuery);
         }
 
 
@@ -191,11 +192,19 @@ public class SearchObject {
     }
 
 
+    public float getBM25(int docId) throws IOException, ParseException {
+        return searcher.getBM25Score(this.QUERY, docId);
+    }
+
+    public int getDistance(int docId) throws IOException {
+        return this.getQueryDistance(docId);
+    }
+/*
     public float getWeight(int docId) throws IOException, ParseException {
         float bm25 = searcher.getBM25Score(this.QUERY, docId);
         int indexDistance = this.getQueryDistance(docId);
         return this.IS_MULTIPLE ? bm25 / indexDistance : bm25;
-    }
+    }*/
 
     private int getQueryDistance(int docId) throws IOException {
         String[] mQuery = this.getQueryArray();

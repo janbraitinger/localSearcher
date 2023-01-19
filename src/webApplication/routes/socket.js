@@ -18,6 +18,9 @@ var _coldStart = true;
 module.exports = (io) => {
     io.on('connection', socket => {
         console.log(socket.id)
+   
+
+
         socket.on('search', (input) => {
             let suggestions = autocomplete(input)
             socket.emit("autocomplete", suggestions)
@@ -40,6 +43,9 @@ module.exports = (io) => {
                 wordCloudData = await wordCloud();
                 wordCloudData = wordCloudData.data;
             }
+
+
+            
             socket.broadcast.emit("wordcloud", wordCloudData);
         });
         

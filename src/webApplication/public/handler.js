@@ -197,7 +197,7 @@ setInterval(function() {
 
 }, 1000);
 
-
+/*
 $(document).on('keypress', function(e) {
   if (e.which == 13) {
 
@@ -217,7 +217,7 @@ $(document).on('keypress', function(e) {
 
       }
   }
-});
+});*/
 
 $(window).click(function() {
   removeElements()

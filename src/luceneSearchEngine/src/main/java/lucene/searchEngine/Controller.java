@@ -14,10 +14,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -62,7 +59,9 @@ public class Controller {
         body = body.replaceAll("[-+.^:,]", "");
         ArrayList<JSONObject> searchResult = this.searchInDocuments(body, searcher, embeddingTypes);
 
+
         List<Map<String, Object>> resultList = searchResult.stream()
+                .filter(Objects::nonNull)
                 .map(json -> json.toMap())
                 .collect(Collectors.toList());
         this.handler.json(new Response("resultlist", resultList));
@@ -125,7 +124,11 @@ public class Controller {
                 checkDockList.add(docId);
 
                 Document document = searcher.getDocument(hit);
-                float weight = searchObject.getWeight(docId) + 5;
+                float bm25 = searchObject.getBM25(docId);
+                double similarity = 1;
+                int distance = searchObject.getDistance(docId);
+                float weight = (float) (0.6 * bm25 + 0.2 * (1/distance) + 0.2 * similarity);
+                System.out.println(weight);
 
                 String preview = searchObject.getPreview(docId);
                 JSONObject jsonMessage = buildMessage(LuceneConstants.NORMAL_MATCHING, searchObject.getQueryString(), weight, document, preview);
@@ -143,13 +146,14 @@ public class Controller {
                 for (List<List<String>> embeddingList : searchObject.getEmbeddings(embeddingTypes)) {
 
                     for (List<String> singleCombination : embeddingList) {
-                        String newSearchQuery = new String();
+                        String newQuery = new String(); // based on embedding
 
                         for (String term : singleCombination) {
-                            newSearchQuery += term + " ";
+                            newQuery += term + " ";
                         }
 
-                        embeddingHit = searcher.search(newSearchQuery);
+
+                        embeddingHit = searcher.search(newQuery);
                         hitCollection = embeddingHit.scoreDocs;
 
 
@@ -158,18 +162,22 @@ public class Controller {
                             if (!checkDockList.contains(docId)) {
                                 checkDockList.add(docId);
                                 Document document = searcher.getDocument(hit);
-                                searchObject.setNewQuery(newSearchQuery);
-                                double similarity = searchObject.getSimilarityTo(searchQuery, embedding);
-                                float weight = (float) (searchObject.getWeight(docId) * Math.pow(3,similarity));
+
+
+                                float bm25 = searchObject.getBM25(docId);
+                                double similarity = searchObject.getSimilarityTo(newQuery, embedding);
+                                int distance = searchObject.getDistance(docId);
+                                float weight = (float) (0.6 * bm25 + 0.2 * (1/distance) + 0.2 * similarity);
+                                System.out.println(weight);
+                                //score = 0.6 * bm25 + 0.2 * (1/d) + 0.2 * similarity
+
 
                                 String preview = searchObject.getPreview(docId);
                                 JSONObject jsonMessage = null;
 
-                                try {
-                                    jsonMessage = buildMessage(embedding, newSearchQuery, weight, document, preview);
-                                } catch (Exception e) {
 
-                                }
+                                jsonMessage = buildMessage(embedding, newQuery, weight, document, preview);
+
                                 addHitsToMessage.add(jsonMessage);
                             }
                         }
