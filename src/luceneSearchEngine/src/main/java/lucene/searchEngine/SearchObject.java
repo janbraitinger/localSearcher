@@ -29,7 +29,7 @@ public class SearchObject {
     }
 
 
-    public void setNewQuery(String query){
+    public void setNewQuery(String query) {
         this.QUERY = query;
     }
 
@@ -50,7 +50,7 @@ public class SearchObject {
         for (String query : this.getQueryArray()) {
 
             ExecutorService executor = Executors.newFixedThreadPool(2);
-
+            System.out.println("--> " + embeddingTypes);
 
             if (embeddingTypes.contains("pubmed")) {
                 long startTime = System.currentTimeMillis();
@@ -75,16 +75,19 @@ public class SearchObject {
         }
 
         List<List<List<String>>> listOfLists = new ArrayList<>();
+
+        if (embeddingTypes.contains("pubmed")) {
+            List<List<String>> pubmedCombinations = cartesian(pubMedList);
+            // System.out.println(pubmedCombinations);
+            listOfLists.add(pubmedCombinations);
+        }
+
         if (embeddingTypes.contains("google")) {
             List<List<String>> googleCombinations = cartesian(googleList);
             listOfLists.add(googleCombinations);
-            System.out.println(googleCombinations);
+            //System.out.println(googleCombinations);
         }
-        if (embeddingTypes.contains("pubmed")) {
-            List<List<String>> pubmedCombinations = cartesian(pubMedList);
-            System.out.println(pubmedCombinations);
-            listOfLists.add(pubmedCombinations);
-        }
+
 
 
         return listOfLists;
@@ -140,16 +143,12 @@ public class SearchObject {
 */
 
 
-
-
-
     public HashMap getTimeStats() {
         return this.timeStats;
     }
 
 
     public String getPreview(int docId) throws InvalidTokenOffsetsException, IOException, ParseException {
-
         return this.searcher.getPreviewOfSingleQuery(docId, this.QUERY);
 
     }
@@ -157,6 +156,7 @@ public class SearchObject {
     public double getSimilarityTo(String newQuery, int embeddingType) {
 
         if (this.IS_MULTIPLE) {
+
             String[] tmp = newQuery.split("\\W+");
             int i = 0;
             float sumSimilarity = 0;
@@ -174,21 +174,22 @@ public class SearchObject {
         }
 
 
-
         newQuery = this.removeLastCharacter(newQuery);
         //this.QUERY = this.removeLastCharacter(this.QUERY);
+        System.out.println(newQuery + " - " + this.QUERY);
 
-        if (embeddingType == 1) { //pubmed
-            System.out.println("calc similarity between: " + this.QUERY +  " and the embedding: " + newQuery + " which is " + this.searcher.pubmed.getSimilarity(this.QUERY, newQuery));
-
-            return this.searcher.pubmed.getSimilarity(this.QUERY, newQuery);
+        switch (embeddingType) {
+            case 1: double sim = this.searcher.pubmed.getSimilarity(this.QUERY, newQuery);
+            System.out.println("1");
+                return sim;
+            case 2:
+                System.out.println("2");
+                return this.searcher.google.getSimilarity(this.QUERY, newQuery);
+            default:
+                throw new Error("Invalid embedding type: " + embeddingType);
         }
-        if (embeddingType == 2) { //google
-            return this.searcher.google.getSimilarity(this.QUERY, newQuery);
-        }
 
 
-        return 0;
     }
 
 
@@ -210,6 +211,9 @@ public class SearchObject {
         String[] mQuery = this.getQueryArray();
         int distance = this.searcher.calcIndexDistance(docId, mQuery);
         if (distance == 0) {
+            return 1;
+        }
+        if (!this.IS_MULTIPLE) {
             return 1;
         }
         return distance;
@@ -249,15 +253,12 @@ public class SearchObject {
 
     public List<List<String>> cartesian(List<List<String>> list) {
         long startTime = System.currentTimeMillis();
-        int i=0;
         List<List<String>> result = new ArrayList<List<String>>();
         int numSets = list.size();
         String[] tmpResult = new String[numSets];
-        i++;
         cartesian(list, 0, tmpResult, result);
-
         long endTime = System.currentTimeMillis();
-        Console.print("Building all combinations needed " + (endTime - startTime) + " ms | " + i, 0);
+        //Console.print("Building all combinations needed " + (endTime - startTime) + " ms", 0);
         return result;
     }
 

@@ -8,6 +8,8 @@ html {
     -webkit-tap-highlight-color: transparent;
  }
 
+
+
 header{
     border:1px;
     height: 50px;
@@ -327,6 +329,7 @@ main{
 }
 
 #aexample{
+    
    display: none;
 }
 

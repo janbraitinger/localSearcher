@@ -26,7 +26,7 @@ public class ApiController {
 
         });
 
-        this.endPoint.get("/api/v1/search/{data}", handler -> {
+        this.endPoint.get("/api/v1/search", handler -> {
             if (!this.lock) {
                 new Controller(handler).search(app.getSearcher());
                 return;

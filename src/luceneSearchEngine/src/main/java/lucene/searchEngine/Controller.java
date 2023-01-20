@@ -9,6 +9,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -48,7 +49,19 @@ public class Controller {
 
     public void search(Searcher searcher) throws InvalidTokenOffsetsException, IOException, ParseException {
 
-        String data = this.handler.pathParam("data");
+
+
+
+        String data = this.handler.queryParam("data");
+
+        JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
+        String embedding = jsonObject.get("embedding").toString();
+        String queryValue = jsonObject.get("query").toString();
+        queryValue = queryValue.replaceAll("[^a-zA-Z0-9\\s]", "");
+        System.out.println("Embedding: " + embedding + ", Query: " + queryValue);
+
+
+       /* String data = this.handler.pathParam("data");
         JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
         String embeddingTypes = jsonObject.get("embedding").toString();
 
@@ -56,8 +69,12 @@ public class Controller {
         String body = jsonObject.get("query").toString();
         body = body.replace("&", " ");
         body = body.substring(1, body.length() - 1);
-        body = body.replaceAll("[-+.^:,]", "");
-        ArrayList<JSONObject> searchResult = this.searchInDocuments(body, searcher, embeddingTypes);
+
+
+
+        body = body.replaceAll("[^a-zA-Z0-9\\s]", "");
+*/
+        ArrayList<JSONObject> searchResult = this.searchInDocuments(queryValue, searcher, embedding);
 
 
         List<Map<String, Object>> resultList = searchResult.stream()
@@ -164,11 +181,13 @@ public class Controller {
                                 Document document = searcher.getDocument(hit);
 
 
-                                float bm25 = searchObject.getBM25(docId);
+                                double bm25 = searchObject.getBM25(docId);
                                 double similarity = searchObject.getSimilarityTo(newQuery, embedding);
+
                                 int distance = searchObject.getDistance(docId);
-                                float weight = (float) (0.6 * bm25 + 0.2 * (1/distance) + 0.2 * similarity);
-                                System.out.println(weight);
+
+                                double weight = 0.6 * bm25 + 0.2 * (1/distance) + 0.2 * similarity;
+
                                 //score = 0.6 * bm25 + 0.2 * (1/d) + 0.2 * similarity
 
 
@@ -202,13 +221,17 @@ public class Controller {
 
     }
 
-    private JSONObject buildMessage(int matchingOperation, String term, float weight, Document doc, String preview) {
+    private JSONObject buildMessage(int matchingOperation, String term, double weight, Document doc, String preview) {
         JSONObject messageSubItem = new JSONObject();
         messageSubItem.put("Matching", matchingOperation);
         messageSubItem.put("Term", term);
         messageSubItem.put("Title", doc.get(LuceneConstants.FILE_NAME));
         messageSubItem.put("Path", doc.get(LuceneConstants.FILE_PATH));
-        messageSubItem.put("Weight", weight); // if problem -> remove
+        try {
+            messageSubItem.put("Weight", weight); // if problem -> remove
+        }
+        catch (Exception e){
+        }
         messageSubItem.put("Preview", preview);
         messageSubItem.put("Date", doc.get(LuceneConstants.CREATION_DATE));
         //messageSubItem.put("Date", "doc.get(LuceneConstants.CREATION_DATE)");

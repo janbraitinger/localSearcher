@@ -14,13 +14,17 @@ module.exports.statusCheck = async () => {
 
 
 module.exports.search = async (query) => {
-    let tmpClientOb = JSON.parse(query)
-
-    return axios.get(LUCENE_ENDPOINT_URL + "search/" + JSON.stringify(tmpClientOb))
-        .then(response => response.data)
-        .catch(() => {
-            return buildJSON("result", "error")
-        })
+    return axios.get(LUCENE_ENDPOINT_URL + "search/", {
+        params: {
+          data: query
+        }
+      })
+      .then(response => {
+        return response.data
+      })
+      .catch(error => {
+        return buildJSON("error", error)
+      });
 }
 
 module.exports.wordCloud = async () => {

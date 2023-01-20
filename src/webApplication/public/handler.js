@@ -28,33 +28,34 @@ const dataTable = $('#aexample').DataTable({
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
-  columnDefs: [{
-          className: 'text-center',
-          targets: [1, 2, 3]
-      },
-      {
-          "width": "50%",
-          "targets": 0
-      },
-      {
-          "width": "25%",
-          "targets": 1
-      },
+  
+  columnDefs: [
+    {
+        className: 'text-center',
+        targets: [1, 2, 3],
+    },
 
-      {
-          target: 5,
-          visible: false,
-          searchable: false,
-      },
-      {
-          target: 6,
-          visible: false,
-          searchable: false,
-      },
+    {
+        "width": "250px",
+        "targets": 3,
+        "targets": "static",
+    },
 
-  ]
-
+    {
+        target: 5,
+        visible: false,
+        searchable: false,
+    },
+    {
+        target: 6,
+        visible: false,
+        searchable: false,
+    },
+]
 });
+
+
+
 const index = ""
 const getSection = new Object();
 
@@ -397,34 +398,31 @@ function handleListElement(MATCHING, obj) {
 
 }
 
-function logslider(position) {
-  // position will be between 0 and 100
-  var minp = 0;
-  var maxp = 5;
+function scaleValues(value,canvasWidth) {
 
+  var n= 0
+  var k = weightList[0];
 
-  var minv = Math.log(10);
-  var maxv = Math.log(10000);
+  var result = (value-n) * canvasWidth / (k-n);
 
-  // calculate adjustment factor
-  var scale = (maxv - minv) / (maxp - minp);
-
-  return Math.exp(minv + scale * (position - minp));
+  return result;
 }
+
 
 
 
 function fillWeightCanvers(weight) {
 
 
+  
 
   let canvas = document.getElementById("myCanvas" + canvasId)
-
+  let canvasWidth = canvas.width;
+  
   try {
       let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'lightblue'
-      ctx.fillRect(20, 20, logslider(weight), 100);
-
+      ctx.fillRect(20, 20, scaleValues(weight,canvasWidth), 100);
       ctx.stroke();
       canvasId++
   } catch {
@@ -466,6 +464,8 @@ $('#aexample tbody').on('click', 'tr', function() {
 });
 
 
+var weightList = []
+
 
 function showResultList(jsonPara) {
   console.log(jsonPara)
@@ -482,6 +482,16 @@ function showResultList(jsonPara) {
   var matchingId = 0
   var objCount = 0
   console.log(jsonPara)
+
+
+
+  for (let itemCollection of jsonPara) {
+    let tmpWeight =  itemCollection.Weight
+    weightList.push(tmpWeight)
+  }
+
+
+
   for (let itemCollection of jsonPara) {
       try{
       if (itemCollection["time"] || itemCollection["stats"]) {
@@ -517,7 +527,7 @@ function showResultList(jsonPara) {
 
   }
 
-  //dataTable.column(4).visible(false); // verbirgt die 4. Spalte
+  dataTable.column(4).visible(false); // verbirgt die 4. Spalte
 
 
 }
