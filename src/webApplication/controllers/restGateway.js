@@ -14,6 +14,7 @@ module.exports.statusCheck = async () => {
 
 
 module.exports.search = async (query) => {
+  
     return axios.get(LUCENE_ENDPOINT_URL + "search/", {
         params: {
           data: query

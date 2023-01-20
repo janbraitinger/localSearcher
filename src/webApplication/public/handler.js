@@ -678,5 +678,10 @@ $(document).ready(function() {
 
 
 
+var container = document.getElementById("searchQueryInputField");
+var list = document.getElementById("list");
+list.style.width = container.offsetWidth-2 + "px";
 
-
+window.addEventListener("resize", function(){
+  list.style.width = container.offsetWidth-2 + "px";
+});

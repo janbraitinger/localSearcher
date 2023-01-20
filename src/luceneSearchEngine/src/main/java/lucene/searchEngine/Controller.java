@@ -1,6 +1,7 @@
 package lucene.searchEngine;
 
 
+import com.beust.ah.A;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.javalin.http.Context;
@@ -15,6 +16,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,7 +57,14 @@ public class Controller {
         String data = this.handler.queryParam("data");
 
         JsonObject jsonObject = new JsonParser().parse(data).getAsJsonObject();
-        String embedding = jsonObject.get("embedding").toString();
+        String embedding;
+        try {
+            embedding = jsonObject.get("embedding").toString();
+        }
+        catch(Exception e)
+        {
+            embedding = new String[]{"google", "pubmed"}.toString();
+        }
         String queryValue = jsonObject.get("query").toString();
         queryValue = queryValue.replaceAll("[^a-zA-Z0-9\\s]", "");
         System.out.println("Embedding: " + embedding + ", Query: " + queryValue);

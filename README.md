@@ -12,16 +12,13 @@
 
 ### The search engine provides a API for receiving requests. Results are available in JSON format. 
 ```console
-GET localhost:4001/status
+GET localhost:4001/api/v1/status
 ```
 ```console
-GET localhost:4001/search/{searchQuery}:{embeddingIDs}
+GET localhost:4001/api/v1/search?data={"query":"YourSearchQuery"}
 ```
 ```console
-GET localhost:4001/conf
-```
-```console
-GET localhost:4001/setconf/{documetFolder}
+GET localhost:4001/api/v1/conf
 ```
 <br/>
 

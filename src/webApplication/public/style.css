@@ -40,8 +40,6 @@ main{
 
 
 .list-group-item {
-
-
     cursor: pointer;
 }
 
@@ -356,6 +354,7 @@ table#aexample.dataTable tbody tr:hover {
 }
 
 .weightCanvas{
+    z-index: 2;
     height: 33px;
     padding-left: 0;
     padding-right: 0;
