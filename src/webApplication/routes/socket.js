@@ -1,6 +1,9 @@
+var levenshtein = require('fast-levenshtein');
+
 const {
     autocomplete,
-    readAutocompleteFile
+    readAutocompleteFile,
+    getTermArray
 } = require('../controllers/autocomplete');
 const {
     statusCheck,
@@ -28,6 +31,23 @@ module.exports = (io) => {
 
         socket.on('finalSearch', async (searchQuery) => {
             let searchResult = await search(searchQuery)
+
+            var searchQueryTerm = JSON.parse(searchQuery)["query"]
+            let lengthOfResultList = searchResult.data.length
+            var termList = getTermArray()
+            if(lengthOfResultList == 1){
+                var doubleCheckList = []
+                for (let term of termList) {
+                    var distance = levenshtein.get(searchQueryTerm, term); 
+                    if(distance<2 && !doubleCheckList.includes(term)){
+                        doubleCheckList.push(term)
+                    }
+                }
+                let alternatives = JSON.stringify(doubleCheckList)
+                socket.emit("didYouMean", alternatives)
+            }
+           
+
             socket.emit("docResultList", searchResult.data)
         });
 

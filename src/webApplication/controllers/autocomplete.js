@@ -3,6 +3,13 @@ const MAXSUGGESTS = 25
 var holeArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
 
 
+module.exports.getTermArray = () => {
+    if(holeArray !== undefined) {
+        return holeArray;
+    }
+    this.readAutocompleteFile()
+    return holeArray;
+}
 
 
 module.exports.readAutocompleteFile = () => {

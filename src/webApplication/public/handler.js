@@ -150,6 +150,20 @@ window.onbeforeunload = function() {
   socket.emit('disconnect', "");
 };
 
+socket.on("didYouMean", (alternative) => {
+  var suggestionJSON = JSON.parse(alternative)
+  var suggestionString = ""
+  for (var i=0; i < suggestionJSON.length; i++) {
+    suggestionString += "<b>"+suggestionJSON[i] + "</b>, "
+ }
+ suggestionString = suggestionString.slice(0, -2);
+
+
+
+
+  $("#didYouMean").html("Found no document with your query. Did you mean one of these " + suggestionString + " ?")
+})
+
 
 socket.on("bradcast", (status) => {
 
