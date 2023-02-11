@@ -1,4 +1,3 @@
-
 import {
   Section,
   RpcGetCall,
@@ -10,7 +9,7 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 const dataTable = $('#aexample').DataTable({
- // "pageLength": 10,
+  // "pageLength": 10,
 
   pagingType: 'full_numbers',
   searching: true,
@@ -28,30 +27,29 @@ const dataTable = $('#aexample').DataTable({
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
-  
-  columnDefs: [
-    {
-        className: 'text-center',
-        targets: [1, 2, 3],
-    },
 
-    {
-        "width": "250px",
-        "targets": 3,
-        "targets": "static",
-    },
+  columnDefs: [{
+          className: 'text-center',
+          targets: [1, 2, 3],
+      },
 
-    {
-        target: 5,
-        visible: false,
-        searchable: false,
-    },
-    {
-        target: 6,
-        visible: false,
-        searchable: false,
-    },
-]
+      {
+          "width": "250px",
+          "targets": 3,
+          "targets": "static",
+      },
+
+      {
+          target: 5,
+          visible: false,
+          searchable: false,
+      },
+      {
+          target: 6,
+          visible: false,
+          searchable: false,
+      },
+  ]
 });
 
 
@@ -115,13 +113,13 @@ socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
 
   removeElements()
   if (dataArray != null) {
-   
-    $("#searchQueryInputField").hover(function () {
-      $(this).css("box-shadow", "none", "important");
-  }, function () {
-    $(this).css("box-shadow", "none", "important");
-  });
-       
+
+      $("#searchQueryInputField").hover(function() {
+          $(this).css("box-shadow", "none", "important");
+      }, function() {
+          $(this).css("box-shadow", "none", "important");
+      });
+
 
 
 
@@ -141,7 +139,7 @@ socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
 
 
 
-$('#settingsModal').on('hidden.bs.modal', function () {
+$('#settingsModal').on('hidden.bs.modal', function() {
   location.reload();
 })
 
@@ -152,16 +150,41 @@ window.onbeforeunload = function() {
 
 socket.on("didYouMean", (alternative) => {
   var suggestionJSON = JSON.parse(alternative)
-  var suggestionString = ""
-  for (var i=0; i < suggestionJSON.length; i++) {
-    suggestionString += "<b>"+suggestionJSON[i] + "</b>, "
- }
- suggestionString = suggestionString.slice(0, -2);
 
 
 
 
-  $("#didYouMean").html("Found no document with your query. Did you mean one of these " + suggestionString + " ?")
+  if (suggestionJSON.length > 0) {
+      var suggestionString = ""
+      for(var i=0;i<suggestionJSON.length;i++){
+        //console.log(suggestionJSON[i][0])
+        suggestionString += suggestionJSON[i][0] + " "
+      }
+    
+  
+      suggestionString = suggestionString.slice(0, -1);
+      
+   
+
+
+
+
+
+      $("#didYouMean").html("Do you mean <span class='suggestion'><b><u>" + suggestionString + "</u></b></span> ?")
+
+  }else{
+    $("#didYouMean").html("No documents found")
+  }
+  $('#didYouMean > span').on('click', function(e) {
+    console.log("ts")
+    e.preventDefault();
+    console.log(e.target.innerHTML);
+    // $('.detailed-tags').prepend("<div class='tag'>" + e.target.innerHTML + "</div>")
+    $('#searchQueryInputField').val(e.target.innerHTML)
+});
+
+
+
 })
 
 
@@ -214,24 +237,24 @@ setInterval(function() {
 
 /*
 $(document).on('keypress', function(e) {
-  if (e.which == 13) {
+if (e.which == 13) {
 
-      e.preventDefault();
-      var searchQuery = getSection.searchInputField.val();
+    e.preventDefault();
+    var searchQuery = getSection.searchInputField.val();
 
-      removeElements()
-      dataTable.clear().draw()
+    removeElements()
+    dataTable.clear().draw()
 
 
 
-      if (searchQuery.length > 0) {
+    if (searchQuery.length > 0) {
 
-          getSection.loader.show()
+        getSection.loader.show()
 
-          socket.emit(RpcSendCall.SEARCH, searchQuery)
+        socket.emit(RpcSendCall.SEARCH, searchQuery)
 
-      }
-  }
+    }
+}
 });*/
 
 $(window).click(function() {
@@ -250,8 +273,19 @@ $("#list").click(function(e) {
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
+
   data = JSON.stringify(data)
   let docs = JSON.parse(data)
+
+
+
+if(docs.length == 1){
+
+  $("#didYouMean").show()
+}else{
+  $("#didYouMean").hide()
+}
+
   canvasId = 0
 
   showResultList(docs)
@@ -293,11 +327,11 @@ setInterval(makeAlert, 500);
 getSection.searchButton.click(function() {
   var searchQuery = getSection.searchInputField.val();
   var embeddingSearchChecked = []
-  if($('#checkboxGoogle').is(':checked')){
-    embeddingSearchChecked.push("google");
+  if ($('#checkboxGoogle').is(':checked')) {
+      embeddingSearchChecked.push("google");
   }
-  if($('#checkboxPubMed').is(':checked')){
-    embeddingSearchChecked.push("pubmed");
+  if ($('#checkboxPubMed').is(':checked')) {
+      embeddingSearchChecked.push("pubmed");
   }
 
 
@@ -308,7 +342,7 @@ getSection.searchButton.click(function() {
 
   let searchMsg = JSON.stringify(searchObj)
 
-  
+
 
 
   removeElements()
@@ -374,11 +408,11 @@ function handleListElement(MATCHING, obj) {
       getWeight = "unknown"
   }
 
-  try{
-    obj.MATCHING
-  }catch{
-    return
-  
+  try {
+      obj.MATCHING
+  } catch {
+      return
+
   }
 
   termArray.push(getTerm)
@@ -393,12 +427,11 @@ function handleListElement(MATCHING, obj) {
 
   let canvas = "<canvas class='weightCanvas' id='myCanvas" + canvasId + "'>Your browser does not support the HTML5 canvas tag.</canvas>"
   let preview = ""
-  try{
-  preview =  obj.Preview.replace(/[\[\]]/g, "");
-  preview = "[...] " + preview + " [...]"
-  }
-  catch{
-    preview = "error"
+  try {
+      preview = obj.Preview.replace(/[\[\]]/g, "");
+      preview = "[...] " + preview + " [...]"
+  } catch {
+      preview = "error"
   }
 
 
@@ -412,12 +445,12 @@ function handleListElement(MATCHING, obj) {
 
 }
 
-function scaleValues(value,canvasWidth) {
+function scaleValues(value, canvasWidth) {
 
-  var n= 0
+  var n = 0
   var k = weightList[0];
 
-  var result = (value-n) * canvasWidth / (k-n);
+  var result = (value - n) * canvasWidth / (k - n);
 
   return result;
 }
@@ -428,15 +461,15 @@ function scaleValues(value,canvasWidth) {
 function fillWeightCanvers(weight) {
 
 
-  
+
 
   let canvas = document.getElementById("myCanvas" + canvasId)
   let canvasWidth = canvas.width;
-  
+
   try {
       let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'lightblue'
-      ctx.fillRect(20, 20, scaleValues(weight,canvasWidth), 100);
+      ctx.fillRect(20, 20, scaleValues(weight, canvasWidth), 100);
       ctx.stroke();
       canvasId++
   } catch {
@@ -482,10 +515,11 @@ var weightList = []
 
 
 function showResultList(jsonPara) {
+
   console.log(jsonPara)
-  if(jsonPara.header == "error"){
-    alert("server is indexing atm")
-    return
+  if (jsonPara.header == "error") {
+      alert("server is indexing atm")
+      return
   }
 
 
@@ -500,25 +534,25 @@ function showResultList(jsonPara) {
 
 
   for (let itemCollection of jsonPara) {
-    let tmpWeight =  itemCollection.Weight
-    weightList.push(tmpWeight)
+      let tmpWeight = itemCollection.Weight
+      weightList.push(tmpWeight)
   }
 
 
 
   for (let itemCollection of jsonPara) {
-      try{
-      if (itemCollection["time"] || itemCollection["stats"]) {
+      try {
+          if (itemCollection["time"] || itemCollection["stats"]) {
 
-          getSection.docCounter.show()
-      
+              getSection.docCounter.show()
 
-          let length = parseInt(jsonPara.length)-1
-          getSection.docCounter.html("found " + length + " documents in " + itemCollection["time"] + " ms <br/> <span class='light'>" + JSON.stringify(itemCollection["stats"]) + "</span>")
-          break
-      }}
-      catch{
-        console.log("time error")
+
+              let length = parseInt(jsonPara.length) - 1
+              getSection.docCounter.html("found " + length + " documents in " + itemCollection["time"] + " ms <br/> <span class='light'>" + JSON.stringify(itemCollection["stats"]) + "</span>")
+              break
+          }
+      } catch {
+          console.log("time error")
       }
       let selectMatching = matching[matchingId]
       let liElement = handleListElement(selectMatching, itemCollection)
@@ -560,7 +594,6 @@ $(document).on('click', '.allow-focus', function(e) {
 
 
 
-
 getSection.changeIndexBtn.on("click", function() {
   //loadEntry()
   let newIndex = getSection.dirPath.val();
@@ -570,7 +603,7 @@ getSection.changeIndexBtn.on("click", function() {
   socket.emit("reIndex", newIndex)
   $("#indexingWrapper").show();
   $("#changeIndexBtn").hide();
-  
+
 
 
 
@@ -628,7 +661,7 @@ function removeElements() {
   items.forEach((item) => {
       item.remove()
   })
- // $("#searchQueryInputField").css("cssText", "border: gainsboro solid 1px !important");
+  // $("#searchQueryInputField").css("cssText", "border: gainsboro solid 1px !important");
 }
 
 
@@ -694,8 +727,8 @@ $(document).ready(function() {
 
 var container = document.getElementById("searchQueryInputField");
 var list = document.getElementById("list");
-list.style.width = container.offsetWidth-2 + "px";
+list.style.width = container.offsetWidth - 2 + "px";
 
-window.addEventListener("resize", function(){
-  list.style.width = container.offsetWidth-2 + "px";
+window.addEventListener("resize", function() {
+  list.style.width = container.offsetWidth - 2 + "px";
 });

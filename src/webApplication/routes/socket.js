@@ -33,18 +33,47 @@ module.exports = (io) => {
             let searchResult = await search(searchQuery)
 
             var searchQueryTerm = JSON.parse(searchQuery)["query"]
-            let lengthOfResultList = searchResult.data.length
+
             var termList = getTermArray()
-            if(lengthOfResultList == 1){
-                var doubleCheckList = []
+
+            var tokens = searchQueryTerm.split(" ");
+
+            var mainList = []
+            for (var i = 0; i < tokens.length; i++) {
+                var subList = []
+                if(termList.includes(tokens[i])){
+                    subList.push(tokens[i])
+                    mainList.push(subList)
+                    continue
+                }
                 for (let term of termList) {
-                    var distance = levenshtein.get(searchQueryTerm, term); 
-                    if(distance<2 && !doubleCheckList.includes(term)){
-                        doubleCheckList.push(term)
+                    let distance = levenshtein.get(tokens[i], term); 
+                    if(distance<2){
+                        subList.push(term)
                     }
                 }
-                let alternatives = JSON.stringify(doubleCheckList)
-                socket.emit("didYouMean", alternatives)
+                mainList.push(subList)
+                
+            }
+
+            
+
+
+          
+
+            let lengthOfResultList = searchResult.data.length
+            console.log(lengthOfResultList)
+
+
+            if(lengthOfResultList == 1){
+
+
+                console.log(mainList)
+                let alternatives = JSON.stringify(mainList)
+                //if(doubleCheckList.length > 0){
+                    socket.emit("didYouMean", alternatives)
+                //}
+              
             }
            
 

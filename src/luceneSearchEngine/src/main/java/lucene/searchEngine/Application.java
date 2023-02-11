@@ -56,9 +56,7 @@ public class Application {
         int numIndexed = indexer.createIndex(this.dataDir, new TextFileFilter());
         //Console.print("dirPath is " + this.confManager.readConf("searching", "dataPath"), 0);
         long endTime = System.currentTimeMillis();
-
         indexer.close();
-
         String consoleMessage = numIndexed + " file(s) indexed, time taken: " + (endTime - startTime) + " ms";
         Console.print(consoleMessage, 0);
         return consoleMessage;

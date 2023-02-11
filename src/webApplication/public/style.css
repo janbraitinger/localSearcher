@@ -61,6 +61,10 @@ main{
 
 }
 
+.suggestion{
+    /*text-decoration: underline;*/
+    cursor: pointer;
+}
 
 
 #searchQueryInputField{
