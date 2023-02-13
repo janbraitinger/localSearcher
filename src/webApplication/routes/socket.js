@@ -48,7 +48,7 @@ module.exports = (io) => {
                 }
                 for (let term of termList) {
                     let distance = levenshtein.get(tokens[i], term); 
-                    if(distance<2){
+                    if(distance<3 ){
                         subList.push(term)
                     }
                 }

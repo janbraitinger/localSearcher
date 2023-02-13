@@ -87,7 +87,7 @@
                 // Define the ID attribute of the span that will wrap the word, and the associated jQuery selector string
                 var word_id = cloud_namespace + "_word_" + index,
                     word_selector = "#" + word_id,
-                    angle = 6.28 * Math.random(),
+                    angle = 1.28 * Math.random(),
                     radius = 0.0,
 
                     // Only used if option.shape == 'rectangular'

@@ -23,7 +23,7 @@
       <title>search for something</title>
    </head>
    <body>
-      <div id="word-cloud">please refresh</div>
+     
       <div id="ttt"></div>
       <div class="loader"></div>
       <header class="sticky">
@@ -43,8 +43,11 @@
                           
          <span id="errormsg"></span>
          <div id="content">
+            <div id="word-cloud" style="padding-top: 75px;">please refresh</div>
          <form autocomplete="off">
+
             <div class="input-group-append" id="inputWrapper" style="height:55px;">
+               
                <div class="input-group-prepend"   >
                   <button class="btn btn-outline-secondary dropdown-toggle turnRedHover" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="embeddingDropDown">Corpus</button>
                   <div class="dropdown-menu" id="embeddingfilter">
@@ -67,23 +70,26 @@
                      </span>
                   </div>
                </div>
+               
                <input type="text" class="form-control" placeholder="search query" aria-label="searchquery" id="searchQueryInputField" aria-describedby="basic-addon2">
                <div class="input-group-append">
-                  <button class="btn btn-outline-secondary" id="searchBtn" type="button" style="border-radius: 0 10px 10px 0px;">find documents</button>
+                  <button class="btn btn-outline-secondary" id="searchBtn" type="button" style="border-radius: 0 10px 10px 0px;">Find Documents</button>
                </div>
+               
                <div id="predictions"></div>
             </div>
             <p id="statistics" style="text-align:center;"></p>
             <div id="container">
                <ul id="list" style="position:absolute; width: 100%;  overflow:hidden; z-index:999;"></ul>
             </div>
+           
          </form>
 
 
          <span id="didYouMean"></span>
 
 
-         <span class="info" style="display:none;">info: first word is primary</span>
+       
          <div id='checkBoxes'>
             <div class="d-flex justify-content-between">
                <div>
@@ -224,5 +230,9 @@
             </div>
          </div>
       </main>
+      <footer>
+                     <span id="description">This search engine scans local files on your computer and uses word embeddings to generate synonyms and similar terms.</span>
+
+         </footer>
    </body>
 </html>
