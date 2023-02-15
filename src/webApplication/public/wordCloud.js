@@ -14,7 +14,7 @@
         // Reference to the container element
         var $this = this;
         // Namespace word ids to avoid collisions between multiple clouds
-        var cloud_namespace = $this.attr('id') || Math.floor((Math.random() * 1000000)).toString(36);
+        var cloud_namespace = $this.attr('id') || Math.floor((Math.random() * 10000)).toString(36);
 
         // Default options value
         var default_options = {
@@ -25,8 +25,8 @@
                 y: ((options && options.height) ? options.height : $this.height()) / 2.0
             },
             delayedMode: word_array.length > 50,
-            shape: false, // It defaults to elliptic shape
-            encodeURI: true,
+            shape: true, // It defaults to elliptic shape
+            encodeURI: false,
             removeOverflowing: true
         };
 
@@ -64,7 +64,7 @@
 
             // Make sure every weight is a number before sorting
             for (var i = 0; i < word_array.length; i++) {
-                word_array[i].weight = parseFloat(word_array[i].weight, 10);
+                word_array[i].weight = parseFloat(word_array[i].weight, 1);
             }
 
             // Sort word_array from the word with the highest weight to the one with the lowest
@@ -94,7 +94,7 @@
                     steps_in_direction = 0.0,
                     quarter_turns = 0.0,
 
-                    weight = 5,
+                    weight = 1,
                     custom_class = "",
                     inner_html = "",
                     word_span;
@@ -114,7 +114,7 @@
                 if (word_array[0].weight > word_array[word_array.length - 1].weight) {
                     // Linearly map the original weight to a discrete scale from 1 to 10
                     weight = Math.round((word.weight - word_array[word_array.length - 1].weight) /
-                        (word_array[0].weight - word_array[word_array.length - 1].weight) * 9.0) + 1;
+                        (word_array[0].weight - word_array[word_array.length - 1].weight) * 5.0) + 1;
                 }
                 word_span = $('<span>').attr(word.html).addClass('w' + weight + " " + custom_class);
 
@@ -258,7 +258,15 @@ socket.on("wordcloud", (data) => {
 
     console.log(data.data)
     buildCloud(data)
+
+
+
+
+//--------------
 });
+
+
+
 
 function buildCloud(data) {
     word_arrays = []
@@ -272,7 +280,7 @@ function buildCloud(data) {
 
             word_arrays.push({
                 text: nobj[key]["word"],
-                weight: parseInt(nobj[key]["weight"])
+                weight: parseInt(nobj[key]["size"])
             });
 
         });

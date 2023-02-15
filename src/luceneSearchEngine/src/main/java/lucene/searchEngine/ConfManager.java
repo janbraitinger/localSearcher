@@ -31,7 +31,6 @@ public class ConfManager {
     }
 
     public void writeConf(String path, String key, String value) throws IOException {
-        System.out.println("12345678");
         ini.put(path, key, value);
         ini.store();
     }

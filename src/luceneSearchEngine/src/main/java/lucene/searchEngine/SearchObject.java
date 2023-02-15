@@ -54,7 +54,7 @@ public class SearchObject {
 
             if (embeddingTypes.contains("pubmed")) {
                 long startTime = System.currentTimeMillis();
-                Future<ArrayList> pubmedEmbeddingsFuture = executor.submit(() -> this.searcher.pubmed.getSimilarWords(query, 10));
+                Future<ArrayList> pubmedEmbeddingsFuture = executor.submit(() -> this.searcher.pubmed.getSimilarWords(query, 75));
                 ArrayList pubmedEmbeddings = pubmedEmbeddingsFuture.get();
                 long estimatedTime = System.currentTimeMillis() - startTime;
                 timeStats.put("pubmed" + counter, estimatedTime);
@@ -63,7 +63,7 @@ public class SearchObject {
 
             if (embeddingTypes.contains("google")) {
                 long startTime = System.currentTimeMillis();
-                Future<ArrayList> googleEmbeddingsFuture = executor.submit(() -> this.searcher.google.getSimilarWords(query, 10));
+                Future<ArrayList> googleEmbeddingsFuture = executor.submit(() -> this.searcher.google.getSimilarWords(query, 25));
                 ArrayList googleEmbeddings = googleEmbeddingsFuture.get();
                 long estimatedTime = System.currentTimeMillis() - startTime;
                 timeStats.put("google" + counter, estimatedTime);

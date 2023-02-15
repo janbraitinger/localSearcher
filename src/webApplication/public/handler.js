@@ -8,9 +8,9 @@ import {
 var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
+var _secureFlag = false
 const dataTable = $('#aexample').DataTable({
   // "pageLength": 10,
-
   pagingType: 'full_numbers',
   searching: true,
   paging: false,
@@ -27,7 +27,13 @@ const dataTable = $('#aexample').DataTable({
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
-
+  "columns": [ // Spaltenbreiten manuell definieren
+  { "width": "50%" },
+  { "width": "10%" },
+  { "width": "20%" },
+  { "width": "10%" },
+  { "width": "0%" }
+],
   columnDefs: [{
           className: 'text-center',
           targets: [1, 2, 3],
@@ -463,17 +469,19 @@ function fillWeightCanvers(weight) {
 
 
 
-  let canvas = document.getElementById("myCanvas" + canvasId)
-  let canvasWidth = canvas.width;
-
   try {
+    let canvas = document.getElementById("myCanvas" + canvasId)
+    let canvasWidth = canvas.width;
       let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'lightblue'
       ctx.fillRect(20, 20, scaleValues(weight, canvasWidth), 100);
       ctx.stroke();
       canvasId++
   } catch {
+
+      console.log("error occurd - please try it again")
       return
+      
   }
 
 
@@ -574,7 +582,7 @@ function showResultList(jsonPara) {
       termArray = []
 
   }
-
+  addFilter()
   dataTable.column(4).visible(false); // verbirgt die 4. Spalte
 
 
@@ -731,4 +739,35 @@ list.style.width = container.offsetWidth - 2 + "px";
 
 window.addEventListener("resize", function() {
   list.style.width = container.offsetWidth - 2 + "px";
+});
+
+
+
+var thresholdSlider = document.getElementById("slider");
+
+
+
+thresholdSlider.addEventListener("input", function() {
+    var threshold = parseFloat(this.value);
+    $("#sliderData").html(threshold)
+    dataTable.draw();
+});
+
+// Add a new filtering function to the DataTable
+function addFilter(){
+  $.fn.dataTable.ext.search.push(
+    function( settings, data, dataIndex ) {
+      var threshold = parseFloat(thresholdSlider.value);
+        var value = parseFloat(data[4]); // assuming the threshold column is 5th (index 4)
+        return (isNaN(threshold) || isNaN(value) || value >= threshold);
+    }
+  );
+
+  thresholdSlider.setAttribute("max", weightList[0])
+
+}
+
+
+$('#slider').on('input', function() {
+  dataTable.draw();
 });

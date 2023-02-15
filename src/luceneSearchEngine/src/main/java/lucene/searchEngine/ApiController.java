@@ -14,7 +14,11 @@ public class ApiController {
         this.port = port;
         this.app = app;
         this.endPoint = Javalin.create(/*config*/).start(this.port);
-        this.handleRequests();
+        try {
+            this.handleRequests();
+        }catch (Exception e){
+            System.err.println(e);
+        }
     }
 
 
@@ -37,6 +41,7 @@ public class ApiController {
 
         this.endPoint.get("/api/v1/wordcloud", handler -> {
             if (!this.lock) {
+                System.out.println("Debug - Word Cloud Request");
                 new Controller(handler).getWordCloud(app.getSearcher());
                 return;
             }
@@ -58,7 +63,6 @@ public class ApiController {
             if (!this.lock) {
                 synchronized (this) {
                     this.lock = true;
-                    System.out.println("was nun");
                     new Controller(handler).setConf(app.getConfManager(), app.getSearcher(), app);
                     System.out.println("done with setting up new path");
                     this.lock = false;

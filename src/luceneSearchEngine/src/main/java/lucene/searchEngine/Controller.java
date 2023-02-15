@@ -38,10 +38,17 @@ public class Controller {
 
     public void getWordCloud(Searcher searcher) {
         ArrayList<JSONObject> wordcloudList = searcher.wordCloudList;
-        List<Map<String, Object>> data = wordcloudList.stream()
-                .map(json -> json.toMap())
-                .collect(Collectors.toList());
-        this.handler.json(new Response("wordcloud", data));
+        try {
+            List<Map<String, Object>> data = wordcloudList.stream()
+                    .filter(Objects::nonNull)
+                    .map(json -> json.toMap())
+                    .collect(Collectors.toList());
+
+            this.handler.json(new Response("wordcloud", data));
+        }catch (Exception e){
+            this.handler.json(new Response("wordcloud","error: \n " + e));
+        }
+
     }
 
     public void getConf(ConfManager conf) {

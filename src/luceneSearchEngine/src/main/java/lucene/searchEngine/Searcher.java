@@ -22,8 +22,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
-
-
 public class Searcher {
     private Map<String, ArrayList<Integer>> termPositionsMap = new HashMap<>();
     IndexReader reader;
@@ -109,52 +107,47 @@ public class Searcher {
 
 
     private void generateWordCloudList() throws IOException {
+        List<Tuple> indexedWords = new ArrayList<>();
 
-
-        ArrayList doubleList = new ArrayList();
         final Fields fields = MultiFields.getFields(reader);
-        final Iterator<String> iterator = fields.iterator();
-        ArrayList<Tuple> bestMatches = new ArrayList();
-        long maxFreq = Long.MIN_VALUE;
-        String freqTerm = "";
-        while (iterator.hasNext()) {
-            final String field = iterator.next();
-            final Terms terms = MultiFields.getTerms(reader, field);
-            final TermsEnum it = terms.iterator();
-            BytesRef term = it.next();
-            while (term != null) {
-
-                final long freq = it.totalTermFreq();
-
-                if (term.utf8ToString().matches("[a-zA-Z]+") && term.utf8ToString().length() > 4) {
-                    bestMatches.add(new Tuple(term.utf8ToString(), (int) freq));
-                }
-                term = it.next();
+        final Terms terms = fields.terms(LuceneConstants.CONTENTS);
+        final TermsEnum termsEnum = terms.iterator();
+        BytesRef term;
+        while ((term = termsEnum.next()) != null) {
+            final String word = term.utf8ToString();
+            if (word.matches("[a-zA-Z]+") && word.length() > 3) { // optional filter for word length and alphabetic characters only
+                final int freq = (int) termsEnum.totalTermFreq();
+                indexedWords.add(new Tuple(word, freq));
             }
         }
 
 
-        Collections.sort(bestMatches, new Comparator<Tuple>() {
+
+
+        Collections.sort(indexedWords, new Comparator<Tuple>() {
             public int compare(Tuple o1, Tuple o2) {
                 return o1.getFreq() - o2.getFreq();
             }
         });
 
 
+        for(int i=0; i<indexedWords.size();i++){
+            System.out.println(indexedWords.get(i).term + " - " + indexedWords.get(i).freq);
+        }
+
+
         ArrayList result = new ArrayList();
-        if (bestMatches.size() > 81) {
-            for (int i = bestMatches.size() - 80; i < bestMatches.size() - 1; i++) {
-                if (!doubleList.contains(bestMatches.get(i).term)) {
-                    doubleList.add(bestMatches.get(i).term);
-                    JSONObject messageObj = new JSONObject();
-                    messageObj.put("word", bestMatches.get(i).term);
-                    messageObj.put("weight", bestMatches.get(i).freq);
-                    result.add(messageObj);
-                }
+        if (indexedWords.size() > 25) {
+            for (int i = indexedWords.size() - 25; i < indexedWords.size() - 1; i++) {
+
+                JSONObject messageObj = new JSONObject();
+                messageObj.put("word", indexedWords.get(i).term);
+                messageObj.put("size", indexedWords.get(i).freq);
+                result.add(messageObj);
             }
+
         } else {
-            this.wordCloudList.add(null);
-            return;
+            result = null;
         }
 
 
@@ -188,7 +181,7 @@ public class Searcher {
     }
 
     public Integer calcIndexDistance(int docId, String[] query) throws IOException {
-      ArrayList indexe = new ArrayList();
+        ArrayList indexe = new ArrayList();
         List<List<Integer>> lst = new ArrayList<List<Integer>>();
 
 
@@ -228,9 +221,6 @@ public class Searcher {
         Collections.sort(counterList);
 
 
-
-
-
         return counterList.get(0);
 
 /*
@@ -255,13 +245,7 @@ public class Searcher {
         return minDistance;*/
 
 
-
-}
-
-
-
-
-
+    }
 
 
     public List<List<Integer>> cartesian(List<List<Integer>> list) {
@@ -312,7 +296,6 @@ public class Searcher {
     }
 
 
-
     // faster
        /*  private ArrayList<Integer> getIndexPositionOfTerm(int docId, String query) throws IOException {
             ArrayList<Integer> positonList = termPositionsMap.get(query);
@@ -341,11 +324,6 @@ public class Searcher {
             }
             return positonList;
         }*/
-
-
-
-
-
 
 
 }
