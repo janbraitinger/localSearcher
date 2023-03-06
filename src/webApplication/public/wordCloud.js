@@ -306,6 +306,7 @@ function buildCloud(data) {
 
 
     if (Object.keys(data).length == 0) {
+        
         $("#word-cloud").html("please refresh page");
     }
 

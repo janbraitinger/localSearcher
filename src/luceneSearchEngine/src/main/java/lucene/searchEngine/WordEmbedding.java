@@ -53,6 +53,8 @@ public class WordEmbedding {
 
         }
         long endTime = System.currentTimeMillis();
+        System.out.println(word);
+        System.out.println(tmp);
         return (ArrayList<String>) tmp.stream().collect(toCollection(ArrayList::new));
         //return tmp;
 

@@ -60,6 +60,7 @@ const dataTable = $('#aexample').DataTable({
 
 
 
+var _first = false
 const index = ""
 const getSection = new Object();
 
@@ -469,19 +470,17 @@ function fillWeightCanvers(weight) {
 
 
 
+  let canvas = document.getElementById("myCanvas" + canvasId)
+  let canvasWidth = canvas.width;
+
   try {
-    let canvas = document.getElementById("myCanvas" + canvasId)
-    let canvasWidth = canvas.width;
       let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'lightblue'
       ctx.fillRect(20, 20, scaleValues(weight, canvasWidth), 100);
       ctx.stroke();
       canvasId++
   } catch {
-
-      console.log("error occurd - please try it again")
       return
-      
   }
 
 
@@ -582,7 +581,8 @@ function showResultList(jsonPara) {
       termArray = []
 
   }
-  addFilter()
+
+
   dataTable.column(4).visible(false); // verbirgt die 4. Spalte
 
 
@@ -746,28 +746,30 @@ window.addEventListener("resize", function() {
 var thresholdSlider = document.getElementById("slider");
 
 
-
 thresholdSlider.addEventListener("input", function() {
-    var threshold = parseFloat(this.value);
-    $("#sliderData").html(threshold)
-    dataTable.draw();
-});
-
-// Add a new filtering function to the DataTable
-function addFilter(){
-  $.fn.dataTable.ext.search.push(
-    function( settings, data, dataIndex ) {
-      var threshold = parseFloat(thresholdSlider.value);
-        var value = parseFloat(data[4]); // assuming the threshold column is 5th (index 4)
-        return (isNaN(threshold) || isNaN(value) || value >= threshold);
-    }
-  );
-
-  thresholdSlider.setAttribute("max", weightList[0])
-
-}
-
-
-$('#slider').on('input', function() {
+  var threshold = parseFloat(this.value);
+  $("#sliderData").html(threshold);
+  addFilter(); // Call addFilter to update the DataTable with the new filter function
   dataTable.draw();
 });
+
+ // Add a new filtering function to the DataTable
+ function addFilter(){
+  logToConsole("filter is active now")
+   $.fn.dataTable.ext.search.pop();
+   $.fn.dataTable.ext.search.push(
+     function(settings, data, dataIndex ) {
+       var threshold = parseFloat(thresholdSlider.value);
+         var value = parseFloat(data[4]); // assuming the threshold column is 5th (index 4)
+         return (isNaN(threshold) || isNaN(value) || value >= threshold);
+     }
+   );
+
+   thresholdSlider.setAttribute("max", weightList[0])
+
+ }
+
+
+ $('#slider').on('input', function() {
+   dataTable.draw();
+ });
