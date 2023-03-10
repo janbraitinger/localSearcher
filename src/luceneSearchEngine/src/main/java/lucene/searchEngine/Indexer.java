@@ -96,6 +96,7 @@ public class Indexer {
 
 
         return document;
+
     }
 
     private String checkFileName(File file){
@@ -142,7 +143,11 @@ public class Indexer {
                     && file.canRead()
                     && filter.accept(file)
             ) {
-                indexFile(file);
+                try {
+                    indexFile(file);
+                }catch (Exception e) {
+                    break;
+                }
             }
         }
     }

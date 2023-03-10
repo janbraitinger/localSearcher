@@ -52,7 +52,9 @@ module.exports = (io) => {
                         subList.push(term)
                     }
                 }
-                mainList.push(subList)
+                if(mainList.length>=1){
+                    mainList.push(subList)
+                }
                 
             }
 

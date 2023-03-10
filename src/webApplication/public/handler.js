@@ -30,9 +30,9 @@ const dataTable = $('#aexample').DataTable({
   "columns": [ // Spaltenbreiten manuell definieren
   { "width": "50%" },
   { "width": "10%" },
-  { "width": "20%" },
+  { "width": "15%" },
   { "width": "10%" },
-  { "width": "0%" }
+  { "width": "5%" }
 ],
   columnDefs: [{
           className: 'text-center',
@@ -167,8 +167,6 @@ socket.on("didYouMean", (alternative) => {
         //console.log(suggestionJSON[i][0])
         suggestionString += suggestionJSON[i][0] + " "
       }
-    
-  
       suggestionString = suggestionString.slice(0, -1);
       
    
