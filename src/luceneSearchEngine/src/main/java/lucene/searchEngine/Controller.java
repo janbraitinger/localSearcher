@@ -37,6 +37,7 @@ public class Controller {
     }
 
     public void getWordCloud(Searcher searcher) {
+
         ArrayList<JSONObject> wordcloudList = searcher.wordCloudList;
         try {
             List<Map<String, Object>> data = wordcloudList.stream()
@@ -55,6 +56,12 @@ public class Controller {
         String confResult = conf.readConf("searching", "dataPath");
         this.handler.json(new Response("configuration", confResult));
     }
+
+
+    public void getInfo(int indexedDocuments) {
+        this.handler.json(new Response("indexedDocuments", indexedDocuments));
+    }
+
 
     public void search(Searcher searcher) throws InvalidTokenOffsetsException, IOException, ParseException {
 
@@ -204,10 +211,10 @@ public class Controller {
 
                                 double weight = 0.6 * bm25 + 0.2 * (1/distance) + 0.2 * similarity;
 
-                                //score = 0.6 * bm25 + 0.2 * (1/d) + 0.2 * similarity
 
 
-                                String preview = searchObject.getPreview(docId);
+
+                                String preview = searchObject.getEmbeddingPreview(docId, newQuery);
                                 JSONObject jsonMessage = null;
 
 

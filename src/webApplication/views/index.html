@@ -18,7 +18,7 @@
     <script>
       const socket = io.connect('http://localhost:3000');
     </script>
-    <script src="wordCloud.js" defer type="module"></script>
+    --<script src="wordCloud.js" defer type="module"></script>
     <script src="handler.js" defer type="module"></script>
     <title>search for something</title>
   </head>
@@ -28,12 +28,14 @@
     <header class="sticky">
       <div class="d-flex justify-content-between">
         <div>
+          
           <span class="dot" style="background-color: orange" id="serverStatus"></span>
         </div>
         <div>
           <a href="#" data-toggle="modal" id="pathSettings" data-target="#settingsModal" class="btnMenue">
             <img src="/img/settings.png" width="20">
           </a>
+          
           <a href="#" id="filterButton" class="btnMenue">
             <img src="/img/filter.png" width="20">
           </a>
@@ -44,7 +46,8 @@
     <main>
       <span id="errormsg"></span>
       <div id="content">
-        <div id="word-cloud" style="padding-top: 75px;">please refresh</div>
+ 
+        <div id="word-cloud" style="padding-top: 75px;">Client error - please refresh</div>
         <form autocomplete="off">
           <div class="input-group-append" id="inputWrapper" style="height:55px;">
             <div class="input-group-prepend">
@@ -78,7 +81,13 @@
             <ul id="list" style="position:absolute; width: 100%;  overflow:hidden; z-index:999;"></ul>
           </div>
         </form>
-        <span id="didYouMean"></span>
+        <div id="indexedDocuments">
+          search trough 
+          <span id="invertedDocumentsNumber">0</span>
+          documents
+          </div>
+
+        <div id="doYouMean"></div>
         <div id='checkBoxes'>
           <div class="d-flex justify-content-between">
             <div></div>
@@ -187,7 +196,7 @@
           </div>
     </main>
     <footer>
-      <span id="description">This search engine scans local files on your computer and uses word embeddings to generate synonyms and similar terms.</span>
+      <span id="description">This search engine scans local files on your computer and uses word embeddings to generate synonyms and similar terms. Please report issues at <b>jan@braitinger.org</u>. </span>
     </footer>
   </body>
 </html>

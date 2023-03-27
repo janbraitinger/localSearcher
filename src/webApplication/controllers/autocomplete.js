@@ -1,19 +1,19 @@
 const fs = require('fs');
 const MAXSUGGESTS = 25
-var holeArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
+var indexedTermsArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
 
 
 module.exports.getTermArray = () => {
-    if(holeArray !== undefined) {
-        return holeArray;
+    if(indexedTermsArray !== undefined) {
+        return indexedTermsArray;
     }
     this.readAutocompleteFile()
-    return holeArray;
+    return indexedTermsArray;
 }
 
 
 module.exports.readAutocompleteFile = () => {
-    holeArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
+    indexedTermsArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
 }
 
 
@@ -24,32 +24,27 @@ module.exports.autocomplete = (input) => {
     var oldResults = ""
     for (let i = 0; i < query.length - 1; i++) {
         oldResults += query[i] + " "
-
     }
     let checkDoubleWords = []
-    for (let arr of holeArray) {
+    for (let indexedTerm of indexedTermsArray) {
         let term = query[query.length - 1]
-        if (arr.toLowerCase().startsWith(term.toLowerCase()) && term != "") {
-            if (!checkDoubleWords.includes(arr.toLocaleLowerCase())) {
-                checkDoubleWords.push(arr.toLocaleLowerCase())
-                let a = getTermsByString(term, oldResults)
-                return a
-
-
-
+        if (indexedTerm.toLowerCase().startsWith(term.toLowerCase()) && term != "") {
+            if (!checkDoubleWords.includes(indexedTerm.toLocaleLowerCase())) {
+                checkDoubleWords.push(indexedTerm.toLocaleLowerCase())
+                return improveSuggestList(term, oldResults)
             }
         }
     }
 }
 
-function getTermsByString(searchInput, oldResults) {
-    var tmp = []
+function improveSuggestList(searchInput, oldResults) {
+    var suggestList = []
     var i = 0
-    for (let arr of holeArray) {
-        if (arr.toLowerCase().startsWith(searchInput.toLowerCase()) && i < MAXSUGGESTS) {
-            tmp.push(oldResults + arr.toLocaleLowerCase())
+    for (let indexedTerm of indexedTermsArray) {
+        if (indexedTerm.toLowerCase().startsWith(searchInput.toLowerCase()) && i < MAXSUGGESTS) {
+            suggestList.push(oldResults + indexedTerm.toLocaleLowerCase())
             i++
         }
     }
-    return tmp
+    return suggestList
 }

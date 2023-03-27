@@ -150,7 +150,10 @@ public class SearchObject {
 
     public String getPreview(int docId) throws InvalidTokenOffsetsException, IOException, ParseException {
         return this.searcher.getPreviewOfSingleQuery(docId, this.QUERY);
+    }
 
+    public String getEmbeddingPreview(int docId, String tmpQuery) throws InvalidTokenOffsetsException, IOException, ParseException {
+        return this.searcher.getPreviewOfSingleQuery(docId, tmpQuery);
     }
 
     public double getSimilarityTo(String newQuery, int embeddingType) {

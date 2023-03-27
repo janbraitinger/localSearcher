@@ -63,6 +63,7 @@ public class Searcher {
     public TopDocs search(String searchQuery)
             throws IOException, ParseException {
         query = queryParser.parse(searchQuery);
+        System.out.println(query);
         return indexSearcher.search(query, LuceneConstants.MAX_SEARCH);
     }
 
@@ -175,25 +176,22 @@ public class Searcher {
 
     public String getPreviewOfSingleQuery(int docId, String inputQuery) throws IOException, ParseException, InvalidTokenOffsetsException {
         query = queryParser.parse(inputQuery);
+        Console.print(inputQuery,0);
         Highlighter highlighter = new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query));
         String text = getDocumentById(docId).get(LuceneConstants.CONTENTS);
-        return highlighter.getBestFragment(new StandardAnalyzer(), LuceneConstants.HIGHLIGHT_INDEX, text);
+        String preview = highlighter.getBestFragment(new StandardAnalyzer(), LuceneConstants.HIGHLIGHT_INDEX, text);
+        Console.print(preview,0);
+        return preview;
     }
 
     public Integer calcIndexDistance(int docId, String[] query) throws IOException {
-        ArrayList indexe = new ArrayList();
         List<List<Integer>> lst = new ArrayList<List<Integer>>();
 
-
         for (int i = 0; i < query.length; i++) {
-
             ArrayList tmpIndexes = getIndexPositionOfTerm(docId, query[i]);
-            //System.out.println(query[i]);
-            //System.out.println(tmpIndexes.size());
             if (tmpIndexes.size() == 0) {
                 return 1;
             }
-
             lst.add(tmpIndexes);
         }
 
@@ -213,10 +211,7 @@ public class Searcher {
             int first = tmpAdder.get(0);
             int last = tmpAdder.get(tmpAdder.size() - 1);
             int indexDistance = first - last;
-
             counterList.add(Math.abs(indexDistance));
-            //System.out.print(" -> " + Math.abs(indexDistance));
-            //System.out.println();
         }
         Collections.sort(counterList);
 
@@ -270,7 +265,6 @@ public class Searcher {
 
 
     private ArrayList<Integer> getIndexPositionOfTerm(int docId, String query) throws IOException {
-        //System.out.println("searching Position for term: <<" + query + ">>");
         ArrayList<Integer> positonList = new ArrayList<>();
         Terms vector = reader.getTermVector(docId, LuceneConstants.TERM_DETAILS);
         TermsEnum terms = vector.iterator();
@@ -279,7 +273,7 @@ public class Searcher {
 
 
         while ((term = terms.next()) != null) {
-            String termstr = term.utf8ToString(); // Get the text string of the term.
+            String termstr = term.utf8ToString();
             String result = termstr.replaceAll("[-+.^:,]", "");
             if (result.equals(query)) {
 

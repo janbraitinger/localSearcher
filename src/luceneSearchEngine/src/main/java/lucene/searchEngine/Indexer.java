@@ -62,7 +62,6 @@ public class Indexer {
             content = FileUtils.readFileToString(file, StandardCharsets.UTF_8).toLowerCase().replaceAll("\\d","");
         }
 
-
         BasicFileAttributes attr = Files.readAttributes(Path.of(file.getPath()), BasicFileAttributes.class);
 
         DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -75,8 +74,6 @@ public class Indexer {
         ft.setStoreTermVectorPayloads( true );
         ft.setStoreTermVectorPositions( true );
         ft.setTokenized( true );
-
-
 
 
         TextField contentField = new TextField(LuceneConstants.CONTENTS, content, Field.Store.YES);
@@ -94,9 +91,7 @@ public class Indexer {
         document.add(termDetails);
         document.add(highlight);
 
-
         return document;
-
     }
 
     private String checkFileName(File file){

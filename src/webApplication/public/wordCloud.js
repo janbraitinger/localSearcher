@@ -65,7 +65,9 @@
             // Make sure every weight is a number before sorting
             for (var i = 0; i < word_array.length; i++) {
                 word_array[i].weight = parseFloat(word_array[i].weight, 1);
+            
             }
+
 
             // Sort word_array from the word with the highest weight to the one with the lowest
             word_array.sort(function(a, b) {
@@ -84,6 +86,7 @@
 
             // Function to draw a word, by moving it in spiral until it finds a suitable empty place. This will be iterated on each word.
             var drawOneWord = function(index, word) {
+                
                 // Define the ID attribute of the span that will wrap the word, and the associated jQuery selector string
                 var word_id = cloud_namespace + "_word_" + index,
                     word_selector = "#" + word_id,
@@ -116,6 +119,7 @@
                     weight = Math.round((word.weight - word_array[word_array.length - 1].weight) /
                         (word_array[0].weight - word_array[word_array.length - 1].weight) * 5.0) + 1;
                 }
+               
                 word_span = $('<span>').attr(word.html).addClass('w' + weight + " " + custom_class);
 
                 // Append link if word.url attribute was set
@@ -256,9 +260,8 @@ var word_arrays = []
 
 socket.on("wordcloud", (data) => {
 
-    console.log(data.data)
-    buildCloud(data)
 
+    buildCloud(data)
 
 
 

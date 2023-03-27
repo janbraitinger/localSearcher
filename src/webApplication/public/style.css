@@ -10,7 +10,7 @@
     #content {
     margin:0 auto;
     max-width:1200px;
-    margin-top:25px
+    margin-top:105px
     }
     
     header {
@@ -71,8 +71,26 @@
     box-shadow:none!important;
     border:#dcdcdc solid 1px!important
     }
+
+
+
+    #progressbar {
+        background-color: lightblue;
+        border-radius: 5px;
+        /* (height of inner div) / 2 + padding */
+        padding: 3px;
+        height:25px;
+        display: block;
+      }
+      
+ 
+
+
+
+
+
     
-    #didYouMean {
+    #doYouMean {
     display:inline-block;
     width:100%;
     text-align:center;
@@ -114,7 +132,7 @@
     }
     
     #word-cloud {
-    z-index:1!important
+    z-index:0!important
     }
     
     .word-wrap {
@@ -480,3 +498,9 @@
     .light {
     color:#f5f5f5
     }
+
+    #indexedDocuments{
+        font-family: monospace;
+        text-align: center;
+    }
+

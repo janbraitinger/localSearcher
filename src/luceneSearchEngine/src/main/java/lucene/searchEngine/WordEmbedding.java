@@ -38,26 +38,15 @@ public class WordEmbedding {
     }
 
     public ArrayList<String> getSimilarWords(String word, int count) {
-
-
-
-
-        long startTime = System.currentTimeMillis();
-        ArrayList tmp = new ArrayList();
-        Collection a = this.w2vModel.wordsNearest(word, count);
-        tmp.add(word);
-        for(Object b : a){
-            if(b.toString().chars().allMatch(Character::isLetter)){
-                tmp.add(b.toString().toLowerCase());
+        ArrayList wordList = new ArrayList();
+        Collection similarWordsCollection = this.w2vModel.wordsNearest(word, count);
+        wordList.add(word);
+        for(Object tuple : similarWordsCollection){
+            if(tuple.toString().chars().allMatch(Character::isLetter)){
+                wordList.add(tuple.toString().toLowerCase());
             }
-
         }
-        long endTime = System.currentTimeMillis();
-        System.out.println(word);
-        System.out.println(tmp);
-        return (ArrayList<String>) tmp.stream().collect(toCollection(ArrayList::new));
-        //return tmp;
-
+        return (ArrayList<String>) wordList.stream().collect(toCollection(ArrayList::new));
     }
 
     public double getSimilarity(String wordA, String wordB){

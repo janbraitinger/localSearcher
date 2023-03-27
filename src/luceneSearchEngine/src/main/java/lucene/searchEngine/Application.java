@@ -1,6 +1,7 @@
 package lucene.searchEngine;
 
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.util.Arrays;
 
 public class Application {
 
+    private int indexedDocuments;
     private Searcher searcher;
     private ConfManager confManager;
     private String indexerDir;
@@ -23,13 +25,17 @@ public class Application {
     }
 
 
+    public int getIndexedDocuments(){
+        System.out.println("Debug - Get indexed docuemnts. Result: " + this.indexedDocuments);
+        return this.indexedDocuments;
+    }
 
 
     public void setup() throws IOException, ParseException {
         this.readConf();
         Console.print("SetUp starts", 0);
         this.deleteIndex();
-        this.createIndex();
+        this.indexedDocuments = this.createIndex();
         if(coldstart){
             this.searcher = new Searcher(indexerDir);
             coldstart = false;
@@ -49,7 +55,7 @@ public class Application {
         Console.print("The index file is saved under "+ indexerDir, 0);
     }
 
-    private String createIndex() throws IOException {
+    private int createIndex() throws IOException {
         Console.print("Create index under "+ indexerDir, 0);
         Indexer indexer = new Indexer(indexerDir);
         long startTime = System.currentTimeMillis();
@@ -59,7 +65,7 @@ public class Application {
         indexer.close();
         String consoleMessage = numIndexed + " file(s) indexed, time taken: " + (endTime - startTime) + " ms";
         Console.print(consoleMessage, 0);
-        return consoleMessage;
+        return numIndexed;
     }
 
     private void deleteIndex() {
@@ -73,6 +79,10 @@ public class Application {
 
     public Searcher getSearcher(){
         return this.searcher;
+    }
+
+    public JSONObject getInfo(){
+        return null;
     }
 
     public ConfManager getConfManager(){

@@ -1,6 +1,7 @@
 package lucene.searchEngine;
 
 import io.javalin.Javalin;
+import org.bytedeco.javacv.FrameFilter;
 
 public class ApiController {
 
@@ -32,7 +33,11 @@ public class ApiController {
 
         this.endPoint.get("/api/v1/search", handler -> {
             if (!this.lock) {
-                new Controller(handler).search(app.getSearcher());
+                try {
+                    new Controller(handler).search(app.getSearcher());
+                }catch(Exception e){
+                    handler.json(new Response("error", "please try again later"));
+                }
                 return;
             }
             handler.json(new Response("error", "please try again later"));
@@ -55,6 +60,11 @@ public class ApiController {
                 return;
             }
             handler.json(new Response("error", "please try again later"));
+        });
+
+
+        this.endPoint.get("/api/v1/information", handler -> {
+                new Controller(handler).getInfo(this.app.getIndexedDocuments());
         });
 
 

@@ -14,7 +14,6 @@ module.exports.statusCheck = async () => {
 
 
 module.exports.search = async (query) => {
-  
     return axios.get(LUCENE_ENDPOINT_URL + "search/", {
         params: {
           data: query
@@ -42,6 +41,14 @@ module.exports.getConfData = async () => {
         .then(response => response.data)
         .catch(() => {
             return buildJSON("conf", "error")
+        })
+}
+
+module.exports.getInformation = async () => {
+    return axios.get(LUCENE_ENDPOINT_URL + "information")
+        .then(response => response.data.data)
+        .catch(() => {
+            return buildJSON("getindexedData", "error")
         })
 }
 

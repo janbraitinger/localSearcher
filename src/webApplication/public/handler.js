@@ -9,7 +9,7 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 var _secureFlag = false
-const dataTable = $('#aexample').DataTable({
+var dataTable = $('#aexample').DataTable({
   // "pageLength": 10,
   pagingType: 'full_numbers',
   searching: true,
@@ -22,18 +22,28 @@ const dataTable = $('#aexample').DataTable({
   ],
   "autoWidth": false,
   "oLanguage": {
-      "sSearch": "Filter Data"
+      "Search": "Filter Data"
   },
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
   "columns": [ // Spaltenbreiten manuell definieren
-  { "width": "50%" },
-  { "width": "10%" },
-  { "width": "15%" },
-  { "width": "10%" },
-  { "width": "5%" }
-],
+      {
+          "width": "50%"
+      },
+      {
+          "width": "10%"
+      },
+      {
+          "width": "15%"
+      },
+      {
+          "width": "10%"
+      },
+      {
+          "width": "5%"
+      }
+  ],
   columnDefs: [{
           className: 'text-center',
           targets: [1, 2, 3],
@@ -60,10 +70,13 @@ const dataTable = $('#aexample').DataTable({
 
 
 
+
+
+
 var _first = false
 const index = ""
 const getSection = new Object();
-
+$.fn.dataTable.ext.errMode = 'none';
 
 getSection.searchButton = $(Section.searchButton)
 getSection.errorMessage = $(Section.errorMessage)
@@ -89,8 +102,7 @@ if (isIOS) {
 
 
 
-/* socket.io section */
-/* receiving messages from node.js backend */
+
 socket.on('connect', () => {
   logToConsole("connect");
 
@@ -98,11 +110,11 @@ socket.on('connect', () => {
 });
 
 socket.on('error'), (data) => {
-  console.log(error)
+  logToConsole("Error: " + data)
 }
 
 socket.on("disconnect", (reason) => {
-  console.log(reason)
+  logToConsole(reason)
   if (reason === "io server disconnect") {
       logToConsole("trying to reconnect")
       socket.connect();
@@ -114,32 +126,21 @@ socket.on("disconnect", (reason) => {
 
 
 
-//  something wrong and only 3 suggestions
 socket.on(RpcGetCall.AUTOCOMPLETE, (result) => {
   var dataArray = result
-
   removeElements()
   if (dataArray != null) {
-
-      $("#searchQueryInputField").hover(function() {
-          $(this).css("box-shadow", "none", "important");
-      }, function() {
-          $(this).css("box-shadow", "none", "important");
-      });
-
-
-
-
+      /* $("#searchQueryInputField").hover(function() {
+           $(this).css("box-shadow", "none", "important");
+       }, function() {
+           $(this).css("box-shadow", "none", "important");
+       });*/
       $("#list").show()
       for (let i of dataArray) {
-
           let word = "<b>" + i.substring(0, getSection.searchInputField.val().length) + "</b>"
           word += i.substring(getSection.searchInputField.val().length)
           $("#list").append("<li class='list-items'> <img class='searchBulletImg' src='/img/searchicon.png'>" + word + "</li>");
-
-
       }
-
   }
 });
 
@@ -152,54 +153,31 @@ $('#settingsModal').on('hidden.bs.modal', function() {
 
 
 window.onbeforeunload = function() {
-  socket.emit('disconnect', "");
+  socket.emit('Disconnected to the server', "");
 };
 
 socket.on("didYouMean", (alternative) => {
   var suggestionJSON = JSON.parse(alternative)
 
-
-
-
   if (suggestionJSON.length > 0) {
-      var suggestionString = ""
-      for(var i=0;i<suggestionJSON.length;i++){
-        //console.log(suggestionJSON[i][0])
-        suggestionString += suggestionJSON[i][0] + " "
+      var suggestionDiv = document.getElementById("doYouMean");
+      var suggestionString = "";
+      var breakUp = 10;
+      for (var i = 0; i < suggestionJSON[0].length && i < breakUp; i++) {
+          suggestionString += "<span class='suggestion'>" + suggestionJSON[0][i] + "</span>, ";
       }
-      suggestionString = suggestionString.slice(0, -1);
-      
-   
+      suggestionDiv.innerHTML = "<span style='color:black;font-style: normal;  '>Do you mean one of these?</span> " + suggestionString.slice(0, -2); // Entfernt das letzte Komma und Leerzeichen
 
+      var suggestions = document.querySelectorAll('.suggestion');
+      for (var i = 0; i < suggestions.length; i++) {
+          suggestions[i].addEventListener('click', function() {
+              $('#searchQueryInputField').val(this.innerText)
+          });
+      }
 
-
-
-
-      $("#didYouMean").html("Do you mean <span class='suggestion'><b><u>" + suggestionString + "</u></b></span> ?")
-
-  }else{
-    $("#didYouMean").html("No documents found")
+  } else {
+      $("#doYouMean").html("No documents found")
   }
-  $('#didYouMean > span').on('click', function(e) {
-    console.log("ts")
-    e.preventDefault();
-    console.log(e.target.innerHTML);
-    // $('.detailed-tags').prepend("<div class='tag'>" + e.target.innerHTML + "</div>")
-    $('#searchQueryInputField').val(e.target.innerHTML)
-});
-
-
-
-})
-
-
-socket.on("bradcast", (status) => {
-
-})
-
-
-socket.on("test", (data) => {
-  console.log(data)
 })
 
 
@@ -209,14 +187,8 @@ $("#disconnectedStatus").hide()
 
 
 setInterval(function() {
-
-
-
-
   socket.on("luceneStatus", (status) => {
-
-
-      switch (status) {
+    switch (status) {
           case 'online':
               $("#serverStatus").css({
                   'background-color': 'greenyellow'
@@ -233,34 +205,8 @@ setInterval(function() {
               });
               break;
       }
-
-
-
   })
-
 }, 1000);
-
-/*
-$(document).on('keypress', function(e) {
-if (e.which == 13) {
-
-    e.preventDefault();
-    var searchQuery = getSection.searchInputField.val();
-
-    removeElements()
-    dataTable.clear().draw()
-
-
-
-    if (searchQuery.length > 0) {
-
-        getSection.loader.show()
-
-        socket.emit(RpcSendCall.SEARCH, searchQuery)
-
-    }
-}
-});*/
 
 $(window).click(function() {
   removeElements()
@@ -271,39 +217,33 @@ $(window).click(function() {
 $("#list").click(function(e) {
   e.stopPropagation();
   getSection.searchInputField.val(e.target.innerText)
-
   removeElements()
 });
 
 
 
 socket.on(RpcGetCall.RESULTLIST, (data) => {
-
   data = JSON.stringify(data)
-  let docs = JSON.parse(data)
+  var docs = JSON.parse(data)
 
-
-
-if(docs.length == 1){
-
-  $("#didYouMean").show()
-}else{
-  $("#didYouMean").hide()
-}
+  if (docs.length == 1) {
+      $("#doYouMean").show()
+  } else {
+      $("#doYouMean").hide()
+  }
 
   canvasId = 0
-
-  showResultList(docs)
-
+  displayResults(docs)
   getSection.loader.hide()
-  $("#aexample_paginate").show()
 });
 
-// conf data could contain multiple elements in future
+
+
+
+
 socket.on(RpcGetCall.CONF, (confData) => {
   let newPath = JSON.parse(confData).path
   getSection.dirPath.val(newPath);
-
 })
 
 
@@ -312,7 +252,6 @@ socket.on(RpcGetCall.SERVERMESSAGE, (data) => {
 
   stdoutBuffer += data + "<br/>"
 
-  //getSection.serverMessage.html("indexing done")
   $("#indexingWrapper").hide()
   $("#indexingDone").text("Indexing done. Please close this window.")
 
@@ -330,7 +269,7 @@ setInterval(makeAlert, 500);
 
 
 getSection.searchButton.click(function() {
-  var searchQuery = getSection.searchInputField.val();
+  var searchQuery = getSection.searchInputField.val().toLowerCase();
   var embeddingSearchChecked = []
   if ($('#checkboxGoogle').is(':checked')) {
       embeddingSearchChecked.push("google");
@@ -403,8 +342,12 @@ getSection.filterButton.click(() => {
 var canvasId = 0
 
 function handleListElement(MATCHING, obj) {
+
+
   var getTerm = ""
   var getWeight = ""
+
+
   try {
       getWeight = obj.Weight
       getTerm = obj.Term
@@ -420,8 +363,8 @@ function handleListElement(MATCHING, obj) {
 
   }
 
-  termArray.push(getTerm)
 
+  termArray.push(getTerm)
 
 
   let termButton = "<button class='termBtn' style='background-color:" + selectMatching(obj.Matching) + "; color:#fff;'>" + getTerm + "</button>"
@@ -430,7 +373,6 @@ function handleListElement(MATCHING, obj) {
 
 
 
-  let canvas = "<canvas class='weightCanvas' id='myCanvas" + canvasId + "'>Your browser does not support the HTML5 canvas tag.</canvas>"
   let preview = ""
   try {
       preview = obj.Preview.replace(/[\[\]]/g, "");
@@ -440,49 +382,28 @@ function handleListElement(MATCHING, obj) {
   }
 
 
+  var bar = '<div id="progressbar" style="width:'+scaleValues(weight)+'px;"></div>'
+
+ 
+  
+  dataTable.row.add([obj.Title, obj.Date, termButton, bar, weightResult, obj.Path, preview]).draw(true);
+  //fillWeightCanvers(weightResult)
 
 
-  dataTable.row.add([obj.Title, obj.Date, termButton, canvas, weightResult, obj.Path, preview]).draw(true);
 
 
-  $('#aexample').show()
-  fillWeightCanvers(weightResult)
 
+ 
+ 
 }
 
-function scaleValues(value, canvasWidth) {
-
+function scaleValues(value) {
   var n = 0
   var k = weightList[0];
-
-  var result = (value - n) * canvasWidth / (k - n);
-
+  var result = (value - n) * 100 / (k - n);
   return result;
 }
 
-
-
-
-function fillWeightCanvers(weight) {
-
-
-
-
-  let canvas = document.getElementById("myCanvas" + canvasId)
-  let canvasWidth = canvas.width;
-
-  try {
-      let ctx = canvas.getContext('2d');
-      ctx.fillStyle = 'lightblue'
-      ctx.fillRect(20, 20, scaleValues(weight, canvasWidth), 100);
-      ctx.stroke();
-      canvasId++
-  } catch {
-      return
-  }
-
-
-}
 
 
 
@@ -519,31 +440,36 @@ $('#aexample tbody').on('click', 'tr', function() {
 var weightList = []
 
 
-function showResultList(jsonPara) {
+function displayResults(jsonPara) {
 
-  console.log(jsonPara)
-  if (jsonPara.header == "error") {
-      alert("server is indexing atm")
+  if (jsonPara == "please try again later") {
+      getSection.loader.hide()
+      alert("An error occured. Please try again.")
       return
   }
 
 
 
-  getSection.searchResults.hide()
-  getSection.searchResults.html("")
+
+  //getSection.searchResults.hide()
+  //getSection.searchResults.html("")
+
   const matching = [Constant.DIRECT_MATCHING, Constant.GOOGLE_EMBEDDING, Constant.PUPMED_EMBEDDING]
   var matchingId = 0
   var objCount = 0
-  console.log(jsonPara)
+ 
 
 
 
   for (let itemCollection of jsonPara) {
+
       let tmpWeight = itemCollection.Weight
+      if (typeof tmpWeight !== 'undefined') {
       weightList.push(tmpWeight)
+      }
   }
 
-
+ 
 
   for (let itemCollection of jsonPara) {
       try {
@@ -557,15 +483,14 @@ function showResultList(jsonPara) {
               break
           }
       } catch {
-          console.log("time error")
+        logToConsole("time error")
       }
       let selectMatching = matching[matchingId]
       let liElement = handleListElement(selectMatching, itemCollection)
       getSection.searchResults.append(liElement)
       matchingId++
-
-
   }
+
 
 
 
@@ -577,11 +502,21 @@ function showResultList(jsonPara) {
 
       $(".termBtn").width(longest.length * 8 + 'px');
       termArray = []
-
   }
 
 
-  dataTable.column(4).visible(false); // verbirgt die 4. Spalte
+
+
+  if (dataTable.data().count() > 0) {
+    dataTable.column(4).visible(false); 
+    $('#aexample').show();
+
+
+  } else {
+    $('#aexample').hide();
+  }
+
+
 
 
 }
@@ -671,6 +606,27 @@ function removeElements() {
 }
 
 
+
+
+socket.on("indexedDocuments", (data) => {
+
+  var number = 0
+  const updateNumber = () => {
+      document.getElementById("invertedDocumentsNumber").innerHTML = parseInt(number);
+      if (number < data) {
+          let tmp = data / 25
+          number += tmp
+          setTimeout(updateNumber, 1000 / 25); // Call this function again after 1 second
+      }
+  };
+
+  // Call the updateNumber function for the first time
+  updateNumber();
+
+
+
+})
+
 /* receiving messages from node.js backend */
 socket.on('getconf', (data) => {
   let newPath = data.body
@@ -724,7 +680,7 @@ $(document).ready(function() {
   // Refilter the table
   $('#min, #max').on('change', function() {
       dataTable.draw();
-      console.log("drwaew")
+   
   });
 });
 
@@ -751,23 +707,21 @@ thresholdSlider.addEventListener("input", function() {
   dataTable.draw();
 });
 
- // Add a new filtering function to the DataTable
- function addFilter(){
+// Add a new filtering function to the DataTable
+function addFilter() {
   logToConsole("filter is active now")
-   $.fn.dataTable.ext.search.pop();
-   $.fn.dataTable.ext.search.push(
-     function(settings, data, dataIndex ) {
-       var threshold = parseFloat(thresholdSlider.value);
-         var value = parseFloat(data[4]); // assuming the threshold column is 5th (index 4)
-         return (isNaN(threshold) || isNaN(value) || value >= threshold);
-     }
-   );
-
-   thresholdSlider.setAttribute("max", weightList[0])
-
- }
+  $.fn.dataTable.ext.search.pop();
+  $.fn.dataTable.ext.search.push(
+      function(settings, data, dataIndex) {
+          var threshold = parseFloat(thresholdSlider.value);
+          var value = parseFloat(data[4]); // assuming the threshold column is 5th (index 4)
+          return (isNaN(threshold) || isNaN(value) || value >= threshold);
+      }
+  );
+  thresholdSlider.setAttribute("max", weightList[0])
+}
 
 
- $('#slider').on('input', function() {
-   dataTable.draw();
- });
+$('#slider').on('input', function() {
+  dataTable.draw();
+});

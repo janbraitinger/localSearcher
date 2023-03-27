@@ -10,18 +10,21 @@ const {
     search,
     wordCloud,
     getConfData,
-    reIndex
+    reIndex,
+    getInformation
 } = require('../controllers/restGateway');
 
 var wordCloudData = "";
 var confData = "/";
 var luceneStatusFlag = false;
 var _coldStart = true;
+var indexedDocuments = getInformation();;
 
 module.exports = (io) => {
     io.on('connection', socket => {
         console.log(socket.id)
-   
+  
+
 
 
         socket.on('search', (input) => {
@@ -31,13 +34,9 @@ module.exports = (io) => {
 
         socket.on('finalSearch', async (searchQuery) => {
             let searchResult = await search(searchQuery)
-
             var searchQueryTerm = JSON.parse(searchQuery)["query"]
-
             var termList = getTermArray()
-
             var tokens = searchQueryTerm.split(" ");
-
             var mainList = []
             for (var i = 0; i < tokens.length; i++) {
                 var subList = []
@@ -47,35 +46,38 @@ module.exports = (io) => {
                     continue
                 }
                 for (let term of termList) {
+
                     let distance = levenshtein.get(tokens[i], term); 
                     if(distance<3 ){
                         subList.push(term)
                     }
                 }
-                if(mainList.length>=1){
-                    mainList.push(subList)
-                }
+                mainList.push(subList)
                 
             }
 
+            console.log(mainList)
+
+        
             
-
-
-          
-
+            
+       
+            try{
             let lengthOfResultList = searchResult.data.length
-            console.log(lengthOfResultList)
-
+          
+           
 
             if(lengthOfResultList == 1){
 
 
-                console.log(mainList)
+        
                 let alternatives = JSON.stringify(mainList)
-                //if(doubleCheckList.length > 0){
                     socket.emit("didYouMean", alternatives)
-                //}
+
               
+            }}
+            catch{
+
             }
            
 
@@ -112,6 +114,8 @@ module.exports = (io) => {
                 socket.broadcast.emit("getconf", confData)
                 readAutocompleteFile()
                 socket.emit("stdout", stdout.body)
+                indexedDocuments = await getInformation();
+                socket.emit("indexedDocuments", indexedDocuments)
             }
 
         });
@@ -120,8 +124,10 @@ module.exports = (io) => {
             if (luceneStatusFlag) {
                 wordCloudData = await wordCloud();
                 confData = await getConfData();
+                indexedDocuments = await getInformation();
             }
-
+           
+            socket.emit("indexedDocuments", indexedDocuments)
             socket.emit("wordcloud", wordCloudData)
             socket.emit("getconf", confData)
         })();
