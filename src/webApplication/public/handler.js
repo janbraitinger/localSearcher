@@ -10,7 +10,6 @@ var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 var _secureFlag = false
 var dataTable = $('#aexample').DataTable({
-  // "pageLength": 10,
   pagingType: 'full_numbers',
   searching: true,
   paging: false,
@@ -27,44 +26,31 @@ var dataTable = $('#aexample').DataTable({
   "iDisplayLength": -1,
   "sPaginationType": "full_numbers",
   "ordering": true,
-  "columns": [ // Spaltenbreiten manuell definieren
-      {
-          "width": "50%"
-      },
-      {
-          "width": "10%"
-      },
-      {
-          "width": "15%"
-      },
-      {
-          "width": "10%"
-      },
-      {
-          "width": "5%"
-      }
+  "columns": [
+      { "width": "500px" },
+      { "width": "100px" },
+      { "width": "100px" },
+      { "width": "100px" },
+      { "width": "" }
   ],
-  columnDefs: [{
+  columnDefs: [
+      {
           className: 'text-center',
           targets: [1, 2, 3],
       },
-
       {
-          "width": "250px",
-          "targets": 3,
-          "targets": "static",
+          targets: 3,
+          width: "100px"
       },
-
       {
-          target: 5,
+          targets: [0, 1, 2, 4],
+          //width: "auto"
+      },
+      {
+          target: [5, 6],
           visible: false,
           searchable: false,
-      },
-      {
-          target: 6,
-          visible: false,
-          searchable: false,
-      },
+      }
   ]
 });
 
@@ -156,18 +142,58 @@ window.onbeforeunload = function() {
   socket.emit('Disconnected to the server', "");
 };
 
+
+
+
+function cartesianProduct(arrays) {
+  var result = [];
+  var j;
+
+  if (!arrays || arrays.length === 0) {
+      return result;
+  }
+
+  function addNext(i, input) {
+      if (i === arrays.length) {
+          result.push(input);
+          return;
+      }
+
+      for (j = 0; j < arrays[i].length; j++) {
+          addNext(i + 1, input.concat(arrays[i][j]));
+      }
+  }
+
+  addNext(0, []);
+
+  return result;
+}
+
+
+
 socket.on("didYouMean", (alternative) => {
   var suggestionJSON = JSON.parse(alternative)
+  var suggestionString = "";
+  var breakUp = 10;
+  var suggestionDiv = document.getElementById("doYouMean");
+
 
   if (suggestionJSON.length > 0) {
-      var suggestionDiv = document.getElementById("doYouMean");
-      var suggestionString = "";
-      var breakUp = 10;
-      for (var i = 0; i < suggestionJSON[0].length && i < breakUp; i++) {
-          suggestionString += "<span class='suggestion'>" + suggestionJSON[0][i] + "</span>, ";
+
+      var arrays = Object.values(suggestionJSON);
+      var cartesian = cartesianProduct(arrays);
+
+
+      for (var i = 0; i < cartesian.length && i < breakUp; i++) {
+          var subString = ""
+          for (var j = 0; j < cartesian[i].length; j++) {
+              subString += cartesian[i][j] + " "
+          }
+          subString = subString.slice(0, -1);
+          suggestionString += "<span class='suggestion'>" + subString + "</span>, ";
+
       }
       suggestionDiv.innerHTML = "<span style='color:black;font-style: normal;  '>Do you mean one of these?</span> " + suggestionString.slice(0, -2); // Entfernt das letzte Komma und Leerzeichen
-
       var suggestions = document.querySelectorAll('.suggestion');
       for (var i = 0; i < suggestions.length; i++) {
           suggestions[i].addEventListener('click', function() {
@@ -179,6 +205,7 @@ socket.on("didYouMean", (alternative) => {
       $("#doYouMean").html("No documents found")
   }
 })
+
 
 
 
@@ -401,6 +428,7 @@ function scaleValues(value) {
   var n = 0
   var k = weightList[0];
   var result = (value - n) * 100 / (k - n);
+  console.log(result)
   return result;
 }
 
@@ -460,7 +488,7 @@ function displayResults(jsonPara) {
  
 
 
-
+  weightList = []
   for (let itemCollection of jsonPara) {
 
       let tmpWeight = itemCollection.Weight

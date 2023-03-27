@@ -46,17 +46,19 @@ module.exports = (io) => {
                     continue
                 }
                 for (let term of termList) {
-
                     let distance = levenshtein.get(tokens[i], term); 
                     if(distance<3 ){
-                        subList.push(term)
+                        if(!subList.includes(term)){
+                            subList.push(term)
+                        }
+              
                     }
                 }
                 mainList.push(subList)
                 
             }
 
-            console.log(mainList)
+        
 
         
             
