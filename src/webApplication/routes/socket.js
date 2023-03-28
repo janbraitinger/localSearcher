@@ -87,10 +87,16 @@ module.exports = (io) => {
         });
 
         socket.on('getCloud', async (searchQuery) => {
+
             try{
             if (_coldStart) {
                 wordCloudData = await wordCloud();
+                if(wordCloudData.body == "error"){
+                    socket.broadcast.emit("wordcloud", "less");
+                    return
+                }
                 wordCloudData = wordCloudData.data;
+
                 _coldStart = false;
             }
             let length = (wordCloudData.data) ? Object.keys(wordCloudData.data).length : 0;
@@ -104,7 +110,9 @@ module.exports = (io) => {
                 wordCloudData = "empty"
             }
 
+   
 
+         
             
             socket.broadcast.emit("wordcloud", wordCloudData);
         });

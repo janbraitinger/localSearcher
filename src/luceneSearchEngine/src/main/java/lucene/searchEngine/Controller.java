@@ -37,8 +37,12 @@ public class Controller {
     }
 
     public void getWordCloud(Searcher searcher) {
-
+        if(searcher.wordCloudList.get(0).equals("less")){
+            this.handler.json(new Response("wordcloud","less"));
+            return;
+        }
         ArrayList<JSONObject> wordcloudList = searcher.wordCloudList;
+
         try {
             List<Map<String, Object>> data = wordcloudList.stream()
                     .filter(Objects::nonNull)

@@ -17,5 +17,5 @@ app.use('/', route);
 
 
 http.listen(PORT, () => {
-    console.log(`Example app listening on port ${PORT}`)
+    console.log(`App is listening on port ${PORT}`)
 })

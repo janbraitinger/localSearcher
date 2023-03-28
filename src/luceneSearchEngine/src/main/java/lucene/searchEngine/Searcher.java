@@ -139,19 +139,18 @@ public class Searcher {
 
 
         ArrayList result = new ArrayList();
-        if (indexedWords.size() > 25) {
-            for (int i = indexedWords.size() - 25; i < indexedWords.size() - 1; i++) {
-
+        int maxBorder = 25;
+        if (indexedWords.size() < maxBorder) {
+            maxBorder = indexedWords.size();
+        }
+        System.out.println(maxBorder);
+        System.out.println(indexedWords.size());
+            for (int i = indexedWords.size() - maxBorder; i < indexedWords.size() - 1; i++) {
                 JSONObject messageObj = new JSONObject();
                 messageObj.put("word", indexedWords.get(i).term);
                 messageObj.put("size", indexedWords.get(i).freq);
                 result.add(messageObj);
             }
-
-        } else {
-            result = null;
-        }
-
 
         this.wordCloudList = result;
 
