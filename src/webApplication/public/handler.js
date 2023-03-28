@@ -9,6 +9,9 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 var _secureFlag = false
+
+
+
 var dataTable = $('#aexample').DataTable({
   pagingType: 'full_numbers',
   searching: true,
@@ -29,7 +32,7 @@ var dataTable = $('#aexample').DataTable({
   "columns": [
       { "width": "500px" },
       { "width": "100px" },
-      { "width": "100px" },
+      { "width": "125px" },
       { "width": "100px" },
       { "width": "" }
   ],
@@ -416,6 +419,7 @@ function handleListElement(MATCHING, obj) {
   dataTable.row.add([obj.Title, obj.Date, termButton, bar, weightResult, obj.Path, preview]).draw(true);
   //fillWeightCanvers(weightResult)
 
+  
 
 
 
@@ -424,11 +428,12 @@ function handleListElement(MATCHING, obj) {
  
 }
 
+
 function scaleValues(value) {
+  //var columnWidth = parseInt($('#aexample thead th:eq(3)').css('width'), 10); // 132px
   var n = 0
   var k = weightList[0];
-  var result = (value - n) * 100 / (k - n);
-  console.log(result)
+  var result = (value - n) * 132 / (k - n);
   return result;
 }
 
@@ -466,6 +471,7 @@ $('#aexample tbody').on('click', 'tr', function() {
 
 
 var weightList = []
+
 
 
 function displayResults(jsonPara) {
@@ -520,8 +526,7 @@ function displayResults(jsonPara) {
   }
 
 
-
-
+  
   if (termArray.length > 0) {
       var longest = termArray.reduce(
           function(a, b) {

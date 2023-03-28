@@ -330,6 +330,8 @@
     }
     
     #aexample {
+    table-layout: fixed; 
+    overflow-wrap: break-word;
     display:none
     }
     
