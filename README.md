@@ -10,6 +10,34 @@
 
 <br/><br/>
 
+<br/>
+
+## Running WebApplication
+ ```console
+ $ cd src/webserver/index.js
+ $ npm install 
+ $ node index.js
+```
+You can access it on the browser by typing `localhost:3000`.
+<br/><br/>
+
+
+## Running Search Engine
+ ```console
+ $ cd src/luceneSearchEngine
+ $ mvn compile
+ $ mvn exec:java -Dexec.mainClass=lucene.searchEngine.Main
+```
+Note that it may take up to 3 minutes for the engine to start.
+<br/><br/>
+
+### In the top right corner, there is a settings symbol. By clicking on it, you can set a new directory where the documents should be indexed.
+
+## 
+<br/><br/>
+<hr/>
+<br/>
+
 ### The search engine offers an Application Programming Interface (API) that adheres to the architectural principles of Representational State Transfer (REST), through which it receives requests. The output of said requests is presented in the JavaScript Object Notation (JSON) format.
 ```console
 GET localhost:4001/api/v1/status
@@ -20,15 +48,6 @@ GET localhost:4001/api/v1/search?data={"query":"YourSearchQuery"}
 ```console
 GET localhost:4001/api/v1/conf
 ```
-<br/>
-
-### The web server, utilizing Node.js as its foundational technology, operates on the local host at port 3000.
- ```console
- $ cd src/webserver/index.js
- $ npm install 
- $ node index.js
-```
-
 
 <br/><br/>
 Contact: jan.braitinger@uni-ulm.de

@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  nodejs-app:
+    build: ./src/webApplication
+    build: ./src
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - my-network
+
+
+
+networks:
+  my-network:

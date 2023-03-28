@@ -87,6 +87,7 @@ module.exports = (io) => {
         });
 
         socket.on('getCloud', async (searchQuery) => {
+            try{
             if (_coldStart) {
                 wordCloudData = await wordCloud();
                 wordCloudData = wordCloudData.data;
@@ -97,6 +98,10 @@ module.exports = (io) => {
             if (length === 0) {
                 wordCloudData = await wordCloud();
                 wordCloudData = wordCloudData.data;
+            }
+            }
+            catch{
+                wordCloudData = "empty"
             }
 
 

@@ -112,6 +112,9 @@ public class Searcher {
 
         final Fields fields = MultiFields.getFields(reader);
         final Terms terms = fields.terms(LuceneConstants.CONTENTS);
+        if(terms == null){
+            return;
+        }
         final TermsEnum termsEnum = terms.iterator();
         BytesRef term;
         while ((term = termsEnum.next()) != null) {
@@ -123,8 +126,6 @@ public class Searcher {
         }
 
 
-
-
         Collections.sort(indexedWords, new Comparator<Tuple>() {
             public int compare(Tuple o1, Tuple o2) {
                 return o1.getFreq() - o2.getFreq();
@@ -132,7 +133,7 @@ public class Searcher {
         });
 
 
-        for(int i=0; i<indexedWords.size();i++){
+        for (int i = 0; i < indexedWords.size(); i++) {
             System.out.println(indexedWords.get(i).term + " - " + indexedWords.get(i).freq);
         }
 
@@ -176,11 +177,11 @@ public class Searcher {
 
     public String getPreviewOfSingleQuery(int docId, String inputQuery) throws IOException, ParseException, InvalidTokenOffsetsException {
         query = queryParser.parse(inputQuery);
-        Console.print(inputQuery,0);
+        Console.print(inputQuery, 0);
         Highlighter highlighter = new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query));
         String text = getDocumentById(docId).get(LuceneConstants.CONTENTS);
         String preview = highlighter.getBestFragment(new StandardAnalyzer(), LuceneConstants.HIGHLIGHT_INDEX, text);
-        Console.print(preview,0);
+        Console.print(preview, 0);
         return preview;
     }
 

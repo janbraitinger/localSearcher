@@ -260,7 +260,10 @@ var word_arrays = []
 
 socket.on("wordcloud", (data) => {
 
-
+    if(data == 'empty'){
+        $("#word-cloud").html("No word cloud available because of no data");
+        return
+    }
     buildCloud(data)
 
 
