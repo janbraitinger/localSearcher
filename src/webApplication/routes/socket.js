@@ -23,7 +23,7 @@ var indexedDocuments = getInformation();;
 module.exports = (io) => {
     io.on('connection', socket => {
         console.log(socket.id)
-  
+        readAutocompleteFile()
 
 
 
@@ -33,90 +33,81 @@ module.exports = (io) => {
         });
 
         socket.on('finalSearch', async (searchQuery) => {
-            let searchResult = await search(searchQuery)
-            var searchQueryTerm = JSON.parse(searchQuery)["query"]
-            var termList = getTermArray()
-            var tokens = searchQueryTerm.split(" ");
-            var mainList = []
-            for (var i = 0; i < tokens.length; i++) {
-                var subList = []
-                if(termList.includes(tokens[i])){
-                    subList.push(tokens[i])
-                    mainList.push(subList)
-                    continue
-                }
-                for (let term of termList) {
-                    let distance = levenshtein.get(tokens[i], term); 
-                    if(distance<3 ){
-                        if(!subList.includes(term)){
-                            subList.push(term)
-                        }
-              
+            var searchResult = await search(searchQuery)
+
+            if (searchResult.data.length == 1) {
+                console.log("no results found")
+                var searchQueryTerm = JSON.parse(searchQuery)["query"]
+                var termList = getTermArray()
+                var tokens = searchQueryTerm.split(" ");
+                var mainList = []
+                console.log("generating suggestions")
+                for (var i = 0; i < tokens.length; i++) {
+                    var subList = []
+                    if (termList.includes(tokens[i])) {
+                        subList.push(tokens[i])
+                        mainList.push(subList)
+                        continue
                     }
+                    for (let term of termList) {
+                        let distance = levenshtein.get(tokens[i], term);
+                        if (distance < 3) {
+                            if (!subList.includes(term)) {
+                                subList.push(term)
+                            }
+
+                        }
+                    }
+                    mainList.push(subList)
+
                 }
-                mainList.push(subList)
-                
-            }
-
-        
-
-        
-            
-            
-       
-            try{
-            let lengthOfResultList = searchResult.data.length
-          
-           
-
-            if(lengthOfResultList == 1){
-
-
-        
-                let alternatives = JSON.stringify(mainList)
+                try {
+                    var alternatives = JSON.stringify(mainList)
+                    console.log(alternatives)
+                    if (mainList.length == 0) {
+                        socket.emit("didYouMean", "empty")
+                        return
+                    }
                     socket.emit("didYouMean", alternatives)
 
-              
-            }}
-            catch{
+                } catch {
+
+                }
 
             }
-           
 
             socket.emit("docResultList", searchResult.data)
         });
 
         socket.on('getCloud', async (searchQuery) => {
 
-            try{
-            if (_coldStart) {
-                wordCloudData = await wordCloud();
-                if(wordCloudData.body == "error"){
-                    socket.broadcast.emit("wordcloud", "less");
-                    return
-                }
-                wordCloudData = wordCloudData.data;
+            try {
+                if (_coldStart) {
+                    wordCloudData = await wordCloud();
+                    if (wordCloudData.body == "error") {
+                        socket.broadcast.emit("wordcloud", "less");
+                        return
+                    }
+                    wordCloudData = wordCloudData.data;
 
-                _coldStart = false;
-            }
-            let length = (wordCloudData.data) ? Object.keys(wordCloudData.data).length : 0;
-        
-            if (length === 0) {
-                wordCloudData = await wordCloud();
-                wordCloudData = wordCloudData.data;
-            }
-            }
-            catch{
+                    _coldStart = false;
+                }
+                let length = (wordCloudData.data) ? Object.keys(wordCloudData.data).length : 0;
+
+                if (length === 0) {
+                    wordCloudData = await wordCloud();
+                    wordCloudData = wordCloudData.data;
+                }
+            } catch {
                 wordCloudData = "empty"
             }
 
-   
 
-         
-            
+
+
             socket.broadcast.emit("wordcloud", wordCloudData);
         });
-        
+
 
         socket.on("reIndex", async (data) => {
             let stdout = await reIndex(data)
@@ -141,7 +132,7 @@ module.exports = (io) => {
                 confData = await getConfData();
                 indexedDocuments = await getInformation();
             }
-           
+
             socket.emit("indexedDocuments", indexedDocuments)
             socket.emit("wordcloud", wordCloudData)
             socket.emit("getconf", confData)

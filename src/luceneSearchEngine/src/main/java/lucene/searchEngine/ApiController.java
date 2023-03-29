@@ -46,7 +46,7 @@ public class ApiController {
 
         this.endPoint.get("/api/v1/wordcloud", handler -> {
             if (!this.lock) {
-                System.out.println("Debug - Word Cloud Request");
+                //System.out.println("Debug - Word Cloud Request");
                 new Controller(handler).getWordCloud(app.getSearcher());
                 return;
             }
@@ -74,7 +74,7 @@ public class ApiController {
                 synchronized (this) {
                     this.lock = true;
                     new Controller(handler).setConf(app.getConfManager(), app.getSearcher(), app);
-                    System.out.println("done with setting up new path");
+                    //System.out.println("done with setting up new path");
                     this.lock = false;
                     return;
                 }

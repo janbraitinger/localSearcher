@@ -9,7 +9,7 @@ var termArray = [] // for getting length if longest term for css width
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 var stdoutBuffer = ""
 var _secureFlag = false
-
+document.getElementById("searchBtn").disabled = true;
 
 
 var dataTable = $('#aexample').DataTable({
@@ -175,6 +175,17 @@ function cartesianProduct(arrays) {
 
 
 socket.on("didYouMean", (alternative) => {
+
+  if(JSON.parse(alternative)[0].length == 0){
+    getSection.loader.hide()
+    $("#doYouMean").html("<span style='color:black;font-style: normal;'>No documents found</span>")
+    return
+  }
+  if(alternative == "empty"){
+    getSection.loader.hide()
+    $("#doYouMean").html("<span style='color:black;font-style: normal;'>No documents found</span>")
+    return
+  }
   var suggestionJSON = JSON.parse(alternative)
   var suggestionString = "";
   var breakUp = 10;
@@ -205,7 +216,7 @@ socket.on("didYouMean", (alternative) => {
       }
 
   } else {
-      $("#doYouMean").html("No documents found")
+      $("#doYouMean").html("<span style='color:black;font-style: normal;'>No documents found</span>")
   }
 })
 
@@ -223,16 +234,20 @@ setInterval(function() {
               $("#serverStatus").css({
                   'background-color': 'greenyellow'
               });
+          
+              document.getElementById("searchBtn").disabled = false;
               break;
           case 'offline':
               $("#serverStatus").css({
                   'background-color': 'red'
               });
+              document.getElementById("searchBtn").disabled = true;
               break;
           default:
               $("#serverStatus").css({
                   'background-color': 'orange'
               });
+              document.getElementById("searchBtn").disabled = true;
               break;
       }
   })

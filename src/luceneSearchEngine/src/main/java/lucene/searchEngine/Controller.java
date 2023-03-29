@@ -37,13 +37,9 @@ public class Controller {
     }
 
     public void getWordCloud(Searcher searcher) {
-        if(searcher.wordCloudList.get(0).equals("less")){
-            this.handler.json(new Response("wordcloud","less"));
-            return;
-        }
-        ArrayList<JSONObject> wordcloudList = searcher.wordCloudList;
-
+        ArrayList<JSONObject> wordcloudList;
         try {
+            wordcloudList = searcher.wordCloudList;
             List<Map<String, Object>> data = wordcloudList.stream()
                     .filter(Objects::nonNull)
                     .map(json -> json.toMap())
@@ -85,7 +81,7 @@ public class Controller {
         }
         String queryValue = jsonObject.get("query").toString();
         queryValue = queryValue.replaceAll("[^a-zA-Z0-9\\s]", "");
-        System.out.println("Embedding: " + embedding + ", Query: " + queryValue);
+        //System.out.println("Embedding: " + embedding + ", Query: " + queryValue);
 
 
        /* String data = this.handler.pathParam("data");

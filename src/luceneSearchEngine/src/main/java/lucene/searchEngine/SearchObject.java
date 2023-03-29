@@ -50,7 +50,7 @@ public class SearchObject {
         for (String query : this.getQueryArray()) {
 
             ExecutorService executor = Executors.newFixedThreadPool(2);
-            System.out.println("--> " + embeddingTypes);
+           // System.out.println("--> " + embeddingTypes);
 
             if (embeddingTypes.contains("pubmed")) {
                 long startTime = System.currentTimeMillis();
@@ -179,14 +179,12 @@ public class SearchObject {
 
         newQuery = this.removeLastCharacter(newQuery);
         //this.QUERY = this.removeLastCharacter(this.QUERY);
-        System.out.println(newQuery + " - " + this.QUERY);
+        //System.out.println(newQuery + " - " + this.QUERY);
 
         switch (embeddingType) {
             case 1: double sim = this.searcher.pubmed.getSimilarity(this.QUERY, newQuery);
-            System.out.println("1");
                 return sim;
             case 2:
-                System.out.println("2");
                 return this.searcher.google.getSimilarity(this.QUERY, newQuery);
             default:
                 throw new Error("Invalid embedding type: " + embeddingType);

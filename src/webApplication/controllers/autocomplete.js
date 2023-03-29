@@ -1,7 +1,10 @@
 const fs = require('fs');
-const MAXSUGGESTS = 25
-var indexedTermsArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
+var ini = require('ini')
 
+
+const MAXSUGGESTS = 25
+var config = ini.parse(fs.readFileSync('../../conf.ini', 'utf-8'))
+var indexedTermsArray = fs.readFileSync(config.index.autocomplete, "utf-8").toString().split(",");
 
 module.exports.getTermArray = () => {
     if(indexedTermsArray !== undefined) {
@@ -13,7 +16,7 @@ module.exports.getTermArray = () => {
 
 
 module.exports.readAutocompleteFile = () => {
-    indexedTermsArray = fs.readFileSync("../indexData.txt", "utf-8").toString().split(",");
+    indexedTermsArray = fs.readFileSync(config.index.autocomplete, "utf-8").toString().split(",");
 }
 
 

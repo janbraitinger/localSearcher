@@ -63,7 +63,7 @@ public class Searcher {
     public TopDocs search(String searchQuery)
             throws IOException, ParseException {
         query = queryParser.parse(searchQuery);
-        System.out.println(query);
+        //System.out.println(query);
         return indexSearcher.search(query, LuceneConstants.MAX_SEARCH);
     }
 
@@ -132,10 +132,10 @@ public class Searcher {
             }
         });
 
-
+        /*
         for (int i = 0; i < indexedWords.size(); i++) {
             System.out.println(indexedWords.get(i).term + " - " + indexedWords.get(i).freq);
-        }
+        }*/
 
 
         ArrayList result = new ArrayList();
@@ -143,8 +143,8 @@ public class Searcher {
         if (indexedWords.size() < maxBorder) {
             maxBorder = indexedWords.size();
         }
-        System.out.println(maxBorder);
-        System.out.println(indexedWords.size());
+        //System.out.println(maxBorder);
+        //System.out.println(indexedWords.size());
             for (int i = indexedWords.size() - maxBorder; i < indexedWords.size() - 1; i++) {
                 JSONObject messageObj = new JSONObject();
                 messageObj.put("word", indexedWords.get(i).term);

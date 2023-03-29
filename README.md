@@ -10,7 +10,9 @@
 
 <br/><br/>
 
-<br/>
+## First of all: Set up `conf.ini` 
+
+<br/><br/>
 
 ## Running WebApplication
  ```console
@@ -21,6 +23,7 @@
 You can access it on the browser by typing `localhost:3000`.
 <br/><br/>
 
+### Searching is only possible if the cirlce on the left top corner is green.
 
 ## Running Search Engine
  ```console
